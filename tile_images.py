@@ -19,4 +19,6 @@ GRASS_IMAGE = load_tile_image("grass")
 WATER_IMAGE = load_tile_image("water")
 
 ORANGE_IMAGE = load_sprite_image("orange")
+ORANGE_TROOP_IMAGE = load_sprite_image("orange_troop")
+ORANGE_TANK_IMAGE = load_sprite_image("orange_tank")
 APPLE_IMAGE = load_sprite_image("apple")

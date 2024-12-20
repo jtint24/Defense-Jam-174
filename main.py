@@ -1,11 +1,12 @@
 from enum import Enum
+from time import time
 from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
 
 import pygame
 from pygame import MOUSEBUTTONDOWN
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
-from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE
+from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE
 from ui import Button
 
 
@@ -17,15 +18,25 @@ class Direction(Enum):
 
 
 class UnitType(Enum):
-    NORMAL = ORANGE_IMAGE
-    APPLE = APPLE_IMAGE
+    SOLDIER = 1
+    HORSE = 2
+    CANNON = 3
+    # TANK = 4
+
+
+class Team(Enum):
+    ORANGE = [ORANGE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE]
+    APPLE = [APPLE_IMAGE]
 
 
 class Unit:
-    def __init__(self, type: UnitType, direction: Direction, team: str):
+    def __init__(self, type: UnitType, direction: Direction,  team: Team):
         self.type = type
         self.direction = direction
         self.team = team
+
+    def get_image(self):
+        return self.team.value[self.type.value-1]
 
 
 class TileTypeData(NamedTuple):
@@ -75,7 +86,7 @@ class Board:
             for col_idx, tile in enumerate(row):
                 screen.blit(tile.type.value.image, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
                 if tile.unit is not None:
-                    screen.blit(tile.unit.type.value, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
+                    screen.blit(tile.unit.get_image(), (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
 
     def update(self):
         # Start by populating new_tiles with the base tiles (not units) from the current board
@@ -99,6 +110,20 @@ class Board:
 
         self.tiles = new_tiles
 
+        # Now, we update each troop's strength
+
+        for row_idx, row in enumerate(self.tiles):
+            unit_line = []
+            for col_idx, tile in enumerate(row):
+
+                if tile.unit is not None:
+                    unit_line.append(tile.unit)
+                else:
+                    for unit in unit_line:
+                        unit.type = UnitType(min(3, len(unit_line)))
+                    unit_line = []
+            for unit in unit_line:
+                unit.type = UnitType(min(3, len(unit_line)))
     def resolve_conflict(self, row_idx: int, col_idx: int):
         pass
 
@@ -125,9 +150,9 @@ class Board:
 
         # Start by identifying units that are about to head into conflict
 
-        squares_claimed_by_team: Dict[str, Dict[Tuple[int, int], List[Tuple[int, int]]]] = {
-            "allies": {},
-            "enemies": {}
+        squares_claimed_by_team: Dict[Team, Dict[Tuple[int, int], List[Tuple[int, int]]]] = {
+            Team.ORANGE: {},
+            Team.APPLE: {}
         }  # Format is team -> claimed_square -> claimed_by_squares
 
         conflicts = {}
@@ -187,7 +212,7 @@ class Board:
                         if not combined_with_conflict:
                             conflicts[claimed_square] = passing_conflict
 
-        #
+        # Resolve all conflicts
 
 
         # Iterate over all units on the board, finding each ones' chain.
@@ -304,6 +329,8 @@ def main():
     while running:
         screen.fill((255, 255, 255))
 
+        board.update()
+
         # Render the board
         board.render()
 
@@ -316,6 +343,7 @@ def main():
         pygame.display.flip()
 
         for event in pygame.event.get():
+
             if event.type == pygame.QUIT:
                 running = False
 
@@ -333,11 +361,13 @@ def main():
                     row = pos[1] // TILE_SIZE
                     if row < len(board.tiles) and col < len(board.tiles[0]):
                         if current_mode == InteractMode.ADD_MODE:
-                            board.tiles[row][col].unit = Unit(UnitType.NORMAL, Direction.UP, "allies")
+                            if board.tiles[row][col].is_free():
+                                board.tiles[row][col].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
                         elif current_mode == InteractMode.ERASE_MODE:
                             board.tiles[row][col].unit = None
 
-        pygame.time.delay(100)
+        pygame.time.delay(20)
+
 
     pygame.quit()
 
