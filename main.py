@@ -39,6 +39,10 @@ class Tile:
         self.type = type
         self.unit = unit
 
+    def is_free(self) -> bool:
+        "Returns whether the tile is clear to walk on, based on tile type and other units on it"
+        return self.type.value.is_passable and self.unit is None
+
 
 class Board:
     def __init__(self, tiles: List[List[Tile]]):
@@ -62,15 +66,48 @@ class Board:
                 if tile.unit is not None:
                     screen.blit(tile.unit.type.value, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
 
-    def update_frames(self):
+    def update(self):
+        # Start by populating new_tiles with the base tiles (not units) from the current board
+        new_tiles = [
+            [
+                Tile(tile.type, None)
+                for tile in row
+            ]
+            for row in self.tiles
+        ]
+
+        # Then, place units in their new positions, detecting collisions where they exist
+
         for row_idx, row in enumerate(self.tiles):
             for col_idx, tile in enumerate(row):
-                pass
+                if tile.unit is not None:
 
-    def advance_unit(self, row_idx: int, col_idx: int):
-        if col_idx+1 < len(self.tiles[row_idx]):
-            self.tiles[row_idx][col_idx+1].unit = self.tiles[row_idx][col_idx].unit
-            self.tiles[row_idx][col_idx].unit = None
+                    faced_tile = self.get_faced_tile(row_idx, col_idx)
+
+                    # If the faced tile is clear to walk on, the unit just moves ahead.
+
+                    if faced_tile is not None and faced_tile.is_free():
+                        faced_tile.unit = tile.unit
+                        tile.unit = None
+
+                    # Add logic for collisions w/ other units or obstacles...
+
+    def get_faced_tile(self, row_idx: int, col_idx: int) -> Optional[Tile]:
+        """
+        Gets the tile faced by a unit at a row, col. If the tile faces the edge, gives None
+        """
+
+        facing_tile = self.tiles[row_idx][col_idx]
+
+        if facing_tile.unit.type == UnitType.NORMAL:
+            row_idx, col_idx = row_idx, col_idx + 1
+        # Add more logic for different types of units, if necessary...
+
+        if 0 <= row_idx < len(self.tiles) and 0 <= col_idx < len(self.tiles[row_idx]):
+            return self.tiles[row_idx][col_idx]
+        return None
+
+
 
 
 pygame.init()
@@ -89,7 +126,6 @@ def main():
         ]
     )
 
-    board.advance_unit(0, 2)
 
     running = True
     while running:
