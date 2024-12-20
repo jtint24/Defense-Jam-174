@@ -13,8 +13,10 @@ class Direction(Enum):
     LEFT = 3,
     RIGHT = 4
 
+
 class UnitType(Enum):
     NORMAL = ORANGE_IMAGE
+
 
 class Unit:
     def __init__(self, type: UnitType, direction: Direction):
@@ -26,7 +28,6 @@ class TileTypeData(NamedTuple):
     is_passable: bool
     image: pygame.Surface
     char_code: str
-    health: int = -1
 
 
 class TileType(Enum):
@@ -97,6 +98,11 @@ class Board:
                         tile.unit = None
 
                     # Add logic for collisions w/ other units or obstacles...
+
+
+
+    def resolve_conflict(self, row_idx: int, col_idx: int):
+        pass
 
     def get_faced_tile(self, row_idx: int, col_idx: int) -> Optional[Tile]:
         """
