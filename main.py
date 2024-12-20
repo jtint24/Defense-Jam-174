@@ -7,13 +7,19 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE
 
 
+class Direction(Enum):
+    UP = 1,
+    DOWN = 2,
+    LEFT = 3,
+    RIGHT = 4
+
 class UnitType(Enum):
     NORMAL = ORANGE_IMAGE
 
-
 class Unit:
-    def __init__(self, type: UnitType):
+    def __init__(self, type: UnitType, direction: Direction):
         self.type = type
+        self.direction = direction
 
 
 class TileTypeData(NamedTuple):
@@ -99,8 +105,15 @@ class Board:
 
         facing_tile = self.tiles[row_idx][col_idx]
 
-        if facing_tile.unit.type == UnitType.NORMAL:
+        if facing_tile.unit.direction == Direction.RIGHT:
             row_idx, col_idx = row_idx, col_idx + 1
+        elif facing_tile.unit.direction == Direction.LEFT:
+            row_idx, col_idx = row_idx, col_idx - 1
+        elif facing_tile.unit.direction == Direction.UP:
+            row_idx, col_idx = row_idx - 1, col_idx
+        elif facing_tile.unit.direction == Direction.DOWN:
+            row_idx, col_idx = row_idx + 1, col_idx
+
         # Add more logic for different types of units, if necessary...
 
         if 0 <= row_idx < len(self.tiles) and 0 <= col_idx < len(self.tiles[row_idx]):
@@ -125,6 +138,10 @@ def main():
             "WWWWWWW"
         ]
     )
+
+    board.tiles[0][0].unit = Unit(UnitType.NORMAL, Direction.RIGHT)
+
+    board.update()
 
 
     running = True
