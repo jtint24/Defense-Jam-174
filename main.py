@@ -15,10 +15,14 @@ class Unit:
     def __init__(self, type: UnitType):
         self.type = type
 
+class TileTypeData(NamedTuple):
+    is_passable: bool
+    image: pygame.Surface
+    health: int = -1
 
 class TileType(Enum):
-    GRASS = GRASS_IMAGE
-    WATER = WATER_IMAGE
+    GRASS = TileTypeData(True, GRASS_IMAGE)
+    WATER = TileTypeData(False, WATER_IMAGE)
 
 
 class Tile:
@@ -44,8 +48,9 @@ class Board:
                 pass
 
     def advance_unit(self, row_idx: int, col_idx: int):
-        self.tiles[row_idx][col_idx+1].unit = self.tiles[row_idx][col_idx].unit
-        self.tiles[row_idx][col_idx].unit = None
+        if col_idx+1 < len(self.tiles[row_idx]):
+            self.tiles[row_idx][col_idx+1].unit = self.tiles[row_idx][col_idx].unit
+            self.tiles[row_idx][col_idx].unit = None
 
 
 pygame.init()
@@ -57,12 +62,12 @@ pygame.display.set_caption("Tile Board")
 
 def main():
     board = Board(tiles=[
-        [Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.WATER, None), Tile(TileType.GRASS, None)],
+        [Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.WATER, None), Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.WATER, None)],
         [Tile(TileType.WATER, Unit(UnitType.NORMAL)), Tile(TileType.GRASS, None), Tile(TileType.WATER, None)],
         [Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.GRASS, None), Tile(TileType.GRASS, None)],
     ])
 
-    board.advance_unit(0, 1)
+    board.advance_unit(0, 2)
 
     running = True
     while running:
