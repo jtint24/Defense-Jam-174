@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Self
 
 import pygame
 
@@ -15,14 +15,23 @@ class Unit:
     def __init__(self, type: UnitType):
         self.type = type
 
+
 class TileTypeData(NamedTuple):
     is_passable: bool
     image: pygame.Surface
+    char_code: str
     health: int = -1
 
+
 class TileType(Enum):
-    GRASS = TileTypeData(True, GRASS_IMAGE)
-    WATER = TileTypeData(False, WATER_IMAGE)
+    GRASS = TileTypeData(True, GRASS_IMAGE, "G")
+    WATER = TileTypeData(False, WATER_IMAGE, "W")
+
+    @classmethod
+    def from_str(cls, name: str):
+        for tile_type in TileType:
+            if tile_type.value.char_code == name:
+                return tile_type
 
 
 class Tile:
@@ -35,10 +44,21 @@ class Board:
     def __init__(self, tiles: List[List[Tile]]):
         self.tiles = tiles
 
+    @staticmethod
+    def row_from_string(row_str: str) -> List[Tile]:
+        return [
+            Tile(TileType.from_str(code), None)
+            for code in row_str
+        ]
+
+    @classmethod
+    def from_string(cls, board_strs: List[str]) -> Self:
+        return Board([cls.row_from_string(row_str) for row_str in board_strs])
+
     def render(self):
         for row_idx, row in enumerate(self.tiles):
             for col_idx, tile in enumerate(row):
-                screen.blit(tile.type.value, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
+                screen.blit(tile.type.value.image, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
                 if tile.unit is not None:
                     screen.blit(tile.unit.type.value, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
 
@@ -61,11 +81,13 @@ pygame.display.set_caption("Tile Board")
 
 
 def main():
-    board = Board(tiles=[
-        [Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.WATER, None), Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.WATER, None)],
-        [Tile(TileType.WATER, Unit(UnitType.NORMAL)), Tile(TileType.GRASS, None), Tile(TileType.WATER, None)],
-        [Tile(TileType.GRASS, Unit(UnitType.NORMAL)), Tile(TileType.GRASS, None), Tile(TileType.GRASS, None)],
-    ])
+    board = Board.from_string(
+        [
+            "GGGW",
+            "WWWG",
+            "WWWWWWW"
+        ]
+    )
 
     board.advance_unit(0, 2)
 
