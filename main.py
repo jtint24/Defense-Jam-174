@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NamedTuple, List, Optional, Self
+from typing import NamedTuple, List, Optional, Self, Tuple
 
 import pygame
 
@@ -85,26 +85,69 @@ class Board:
 
         # Then, place units in their new positions, detecting collisions where they exist
 
-        for row_idx, row in enumerate(self.tiles):
-            for col_idx, tile in enumerate(row):
-                if tile.unit is not None:
+        chains = self.identify_chains()
 
-                    faced_tile = self.get_faced_tile(row_idx, col_idx)
-
-                    # If the faced tile is clear to walk on, the unit just moves ahead.
-
-                    if faced_tile is not None and faced_tile.is_free():
-                        faced_tile.unit = tile.unit
-                        tile.unit = None
-
-                    # Add logic for collisions w/ other units or obstacles...
-
-
+        for chain in chains:
+            for row_idx, col_idx in chain:
+                self.move_unit(row_idx, col_idx)
 
     def resolve_conflict(self, row_idx: int, col_idx: int):
         pass
 
-    def get_faced_tile(self, row_idx: int, col_idx: int) -> Optional[Tile]:
+    def move_unit(self, row_idx: int, col_idx: int):
+        pass
+    def identify_chains(self) -> List[List[Tuple[int, int]]]:
+        chains_starting_points = {}
+        identified_unit_points = set()
+
+        # Iterate over all units on the board, finding each ones' chain.
+        for row_idx, row in enumerate(self.tiles):
+            for col_idx, tile in enumerate(row):
+                if (row_idx, col_idx) in identified_unit_points:
+                    continue
+                if tile.unit is not None:
+                    chain = self.extract_chain(row_idx, col_idx)
+                    if chain is not None:
+                        identified_unit_points.update(chain)
+
+                        # Remove any smaller subchains that were identified earlier
+                        chains_to_remove = set()
+                        for starting_point in chains_starting_points:
+                            if starting_point in chain:
+                                chains_to_remove.add(starting_point)
+
+                        for chain_to_remove in chains_to_remove:
+                            chains_starting_points.pop(chain_to_remove)
+
+                        chains_starting_points[(row_idx, col_idx)] = chain
+
+        return list(chains_starting_points.values())
+
+
+
+    def extract_chain(self, row_idx: int, col_idx: int) -> Optional[List[Tuple[int, int]]]:
+        """
+        Returns a chain of units that must move in order, starting from the specified row_idx, col_idx.
+        Returns None if the unit cannot move
+        """
+
+        faced_tile, f_row_idx, f_col_idx = self.get_faced_tile(row_idx, col_idx)
+
+        if faced_tile is None or not faced_tile.type.value.is_passable:
+            return None
+        if faced_tile.is_free():
+            return [(row_idx, col_idx)]
+
+        # If the faced tile is occupied by a unit that is also free to move next turn, we can move to it
+
+        chain = self.extract_chain(f_row_idx, f_col_idx)
+        if chain is not None:
+            return chain + [(row_idx, col_idx)]
+        else:
+            return None
+
+
+    def get_faced_tile(self, row_idx: int, col_idx: int) -> Tuple[Optional[Tile], int, int]:
         """
         Gets the tile faced by a unit at a row, col. If the tile faces the edge, gives None
         """
@@ -123,10 +166,8 @@ class Board:
         # Add more logic for different types of units, if necessary...
 
         if 0 <= row_idx < len(self.tiles) and 0 <= col_idx < len(self.tiles[row_idx]):
-            return self.tiles[row_idx][col_idx]
-        return None
-
-
+            return self.tiles[row_idx][col_idx], row_idx, col_idx
+        return None, row_idx, col_idx
 
 
 pygame.init()
@@ -139,16 +180,22 @@ pygame.display.set_caption("Tile Board")
 def main():
     board = Board.from_string(
         [
-            "GGGW",
-            "WWWG",
-            "WWWWWWW"
+            "GGGG",
+            "GGGG",
+            "GGGG"
         ]
     )
 
     board.tiles[0][0].unit = Unit(UnitType.NORMAL, Direction.RIGHT)
+    board.tiles[0][1].unit = Unit(UnitType.NORMAL, Direction.RIGHT)
+    board.tiles[0][2].unit = Unit(UnitType.NORMAL, Direction.RIGHT)
+    board.tiles[1][0].unit = Unit(UnitType.NORMAL, Direction.UP)
+    board.tiles[2][0].unit = Unit(UnitType.NORMAL, Direction.UP)
+    board.tiles[2][1].unit = Unit(UnitType.NORMAL, Direction.LEFT)
+    board.tiles[2][2].unit = Unit(UnitType.NORMAL, Direction.LEFT)
+    board.tiles[1][2].unit = Unit(UnitType.NORMAL, Direction.DOWN)
 
-    board.update()
-
+    print(board.identify_chains())
 
     running = True
     while running:
