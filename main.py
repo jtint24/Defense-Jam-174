@@ -138,8 +138,6 @@ class Board:
 
         return list(chains_starting_points.values()), locked_unit_points
 
-
-
     def extract_chain(self, row_idx: int, col_idx: int) -> Optional[List[Tuple[int, int]]]:
         """
         Returns a chain of units that must move in order, starting from the specified row_idx, col_idx.
@@ -160,7 +158,6 @@ class Board:
             return chain + [(row_idx, col_idx)]
         else:
             return None
-
 
     def get_faced_tile(self, row_idx: int, col_idx: int) -> Tuple[Optional[Tile], int, int]:
         """
@@ -195,7 +192,7 @@ pygame.display.set_caption("Tile Board")
 def main():
     board = Board.from_string(
         [
-            "GGGGGGG",
+            "GGGGGWG",
             "GGGGGGG",
             "GGGGGGG"
         ]
@@ -220,6 +217,7 @@ def main():
 
         pygame.display.flip()
 
+        board.update()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
