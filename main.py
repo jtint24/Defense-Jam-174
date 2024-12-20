@@ -1,5 +1,7 @@
 from enum import Enum
+from tkinter.constants import NORMAL
 from typing import NamedTuple, List, Optional, Self
+from unittest import case
 
 import pygame
 
@@ -14,15 +16,32 @@ class Direction(Enum):
     RIGHT = 4
 
 
-class UnitType(Enum):
+class UnitImage(Enum):
     NORMAL = ORANGE_IMAGE
 
+class UnitTypeData(NamedTuple):
+    value: int
+    image: UnitImage
+
+class UnitType(Enum):
+    SOLDIER = UnitTypeData(1, UnitImage(NORMAL))
+    HORSE = UnitTypeData(2, UnitImage(NORMAL))
+    CANNON = UnitTypeData(3, UnitImage(NORMAL))
+    TANK = UnitTypeData(4, UnitImage(NORMAL))
+
+class Team(Enum):
+    PLAYER = 1,
+    ENEMY = 2,
+    OPPONENT = 3
 
 class Unit:
-    def __init__(self, type: UnitType, direction: Direction):
+    def __init__(self, type: UnitType, direction: Direction, team: Team):
         self.type = type
         self.direction = direction
+        self.team = team
 
+    def is_opponent(self, unit: Self) -> bool:
+        return unit.team == self.team
 
 class TileTypeData(NamedTuple):
     is_passable: bool
@@ -93,15 +112,38 @@ class Board:
 
                     # If the faced tile is clear to walk on, the unit just moves ahead.
 
-                    if faced_tile is not None and faced_tile.is_free():
-                        faced_tile.unit = tile.unit
-                        tile.unit = None
-
-                    # Add logic for collisions w/ other units or obstacles...
+                    if faced_tile is not None:
+                        if faced_tile.is_free():
+                            faced_tile.unit = tile.unit
+                            tile.unit = None
+                        else:
+                            # logic for collisions w/ other units or obstacles...
+                            if faced_tile.unit is not None:
+                                # Battle is space is occupied
+                                if tile.unit.is_opponent(faced_tile.unit):
+                                    self.resolve_conflict(row_idx, col_idx)
+                                else:
+                                    self.promote_unit(tile.unit)
+                                    faced_tile.unit = None
+                            else:
+                                # Do something if there is an obstacle in the way
+                                self.react_obstacle(tile.unit)
 
 
 
     def resolve_conflict(self, row_idx: int, col_idx: int):
+
+        pass
+    def react_obstacle(self, row_idx: int, col_idx: int):
+        match self.tiles[row_idx][col_idx].type:
+            case TileType.GRASS:
+                pass
+            case TileType.WATER:
+                pass
+
+        pass
+    def promote_unit(self, row_idx: int, col_idx: int):
+        self.tiles[row_idx][col_idx].unit.type = (self.tiles[row_idx][col_idx].unit.type.value+1).name
         pass
 
     def get_faced_tile(self, row_idx: int, col_idx: int) -> Optional[Tile]:
@@ -145,7 +187,7 @@ def main():
         ]
     )
 
-    board.tiles[0][0].unit = Unit(UnitType.NORMAL, Direction.RIGHT)
+    board.tiles[0][0].unit = Unit(UnitImage.NORMAL, Direction.RIGHT)
 
     board.update()
 
