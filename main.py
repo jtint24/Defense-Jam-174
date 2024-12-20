@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import NamedTuple, List, Optional, Self, Tuple
+from typing import NamedTuple, List, Optional, Self, Tuple, Set
 
 import pygame
 
@@ -85,20 +85,33 @@ class Board:
 
         # Then, place units in their new positions, detecting collisions where they exist
 
-        chains = self.identify_chains()
+        chains, locked_units = self.identify_chains()
 
         for chain in chains:
             for row_idx, col_idx in chain:
-                self.move_unit(row_idx, col_idx)
+                self.move_unit(new_tiles, row_idx, col_idx)
+        for row_idx, col_idx in locked_units:
+            new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
+
+        self.tiles = new_tiles
 
     def resolve_conflict(self, row_idx: int, col_idx: int):
         pass
 
-    def move_unit(self, row_idx: int, col_idx: int):
-        pass
-    def identify_chains(self) -> List[List[Tuple[int, int]]]:
+    def move_unit(self, new_tiles: List[List[Tile]], row_idx: int, col_idx: int):
+        _, f_row_idx, f_col_idx = self.get_faced_tile(row_idx, col_idx)
+        new_tiles[f_row_idx][f_col_idx].unit = self.tiles[row_idx][col_idx].unit
+
+    def identify_chains(self) -> Tuple[List[List[Tuple[int, int]]], Set[Tuple[int, int]]]:
+        """
+        Returns a tuple with two elements.
+        The first is a list of chains. Each chain has points in order of how they needed to move.
+        The second is a list of units that cannot move.
+        Every unit is in a chain or it cannot move.
+        """
         chains_starting_points = {}
         identified_unit_points = set()
+        locked_unit_points = set()
 
         # Iterate over all units on the board, finding each ones' chain.
         for row_idx, row in enumerate(self.tiles):
@@ -120,8 +133,10 @@ class Board:
                             chains_starting_points.pop(chain_to_remove)
 
                         chains_starting_points[(row_idx, col_idx)] = chain
+                    else:
+                        locked_unit_points.add((row_idx, col_idx))
 
-        return list(chains_starting_points.values())
+        return list(chains_starting_points.values()), locked_unit_points
 
 
 
@@ -180,9 +195,9 @@ pygame.display.set_caption("Tile Board")
 def main():
     board = Board.from_string(
         [
-            "GGGG",
-            "GGGG",
-            "GGGG"
+            "GGGGGGG",
+            "GGGGGGG",
+            "GGGGGGG"
         ]
     )
 
@@ -197,12 +212,14 @@ def main():
 
     print(board.identify_chains())
 
+
     running = True
     while running:
         screen.fill((255, 255, 255))
         board.render()
 
         pygame.display.flip()
+
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
