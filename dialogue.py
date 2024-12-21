@@ -96,7 +96,17 @@ class Dialogue:
 
 opening_dialogue = Dialogue.from_list(
     [
-        ("Alright, general! Here's the battlefield laid out for you", GENERAL_IMAGE, None),
-        ("You can see that the enemy apples are already there.", GENERAL_IMAGE, None)
+        ("Alright, corporal! Here's the battlefield laid out for you...", GENERAL_IMAGE, None),
+        ("You can see that those dastardly apples are already there.", GENERAL_IMAGE, None),
+        ("Your objective? To send as many oranges across the battlefield as possible!", GENERAL_IMAGE, None),
+        ("But beware! Those apples are going to try and get across too. And when our troops collide, a fight is inevitable.", GENERAL_IMAGE, None),
+        ("Whoever gets more troops to the other side, wins!", GENERAL_IMAGE, None),
+        ("And... I hate to tell you this, but we are outnumbered. We merely have 2 troops at our disposal, and they seem to have 3!", GENERAL_IMAGE, None),
+        ("Fear not! If we position our troops strategically, we shall emerge the victors", GENERAL_IMAGE, None),
+        ("Troops positioned in *vertical* *lines* will form an incredible flank! This will increase their defense astronomically!", GENERAL_IMAGE, None),
+        ("The longer the flank, the greater the defense!", GENERAL_IMAGE, None),
+        ("And troops positioned in *horizontal* *lines* will line up to upgrade their fighting power!", GENERAL_IMAGE, None),
+        ("If our enemies form a flank, a long line of soldiers might be just the thing to break it to smithereens!", GENERAL_IMAGE, None),
+        ("I think a *vertical* flank ought to dispatch these neer-do-wells right quick!", GENERAL_IMAGE, None),
     ]
 )

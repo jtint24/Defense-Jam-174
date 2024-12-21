@@ -83,7 +83,14 @@ def main():
                 next_button.draw(screen)
 
         elif current_game_state == GameState.DIALOGUE:
-            current_dialogue.render(screen, small_font, frame_count)
+
+            board.render(screen, frame_count, current_game_state)
+
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 100))
+            screen.blit(overlay, (0, 0))
+
+            current_dialogue.render(screen, big_font, frame_count)
 
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
