@@ -7,3 +7,4 @@ class GameState(Enum):
     PLAY_TROOPS = 3
     RESULTS_SCREEN = 4
     DIALOGUE = 5
+    LEVEL_EDIT = 6

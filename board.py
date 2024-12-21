@@ -118,7 +118,10 @@ class Board:
         self.tiles = new_tiles
 
         # Now, we update each troop's strength
+        self.update_strenth_defense(frame)
+        return change
 
+    def update_strenth_defense(self, frame: int):
         for row_idx, row in enumerate(self.tiles):
             unit_line = []
             for col_idx, tile in enumerate(row):
@@ -147,8 +150,6 @@ class Board:
                     unit_line = []
             for unit in unit_line:
                 unit.defense = min(5, len(unit_line))
-
-        return change
 
     def resolve_conflict(self, conflict: "Conflict") -> Set[Tuple[int, int]]:
         team_damage = {team: 0 for team in Team}
