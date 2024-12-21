@@ -7,6 +7,7 @@ from pygame import MOUSEBUTTONDOWN
 
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
+from dialogue import opening_dialogue
 from gamestate import GameState
 from level import levels
 from tile_images import PLAY_IMAGE
@@ -21,6 +22,9 @@ pygame.display.set_caption("Tile Board")
 
 def main():
     big_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
+    small_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 4)
+    title_font = pygame.font.Font("resources/fonts/CDStitleUnicaseV.ttf", 8 * 8)
+
     play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
     next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
 
@@ -37,6 +41,10 @@ def main():
     troops_killed = 0
     next_round_troops = -1
 
+    current_dialogue = opening_dialogue
+
+    current_game_state = GameState.DIALOGUE
+
     while running:
         frame_count += 1
         screen.fill((255, 255, 255))
@@ -48,8 +56,8 @@ def main():
             next_round_troops = max_units + (bonus_troops if success else 0) - troops_killed
 
             result_text = "SUCCESS!" if success else "FAILURE!"
-            result_color = (0, 180, 40) if success else (255, 0, 0)
-            result_surface = big_font.render(result_text, False, result_color)
+            result_color = (106, 190, 48) if success else (172, 50, 50)
+            result_surface = title_font.render(result_text, False, result_color)
             result_rect = result_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
             screen.blit(result_surface, result_rect)
 
@@ -75,6 +83,15 @@ def main():
             if next_round_troops > 0 and len(levels) > level_idx+1:
                 next_button.draw(screen)
 
+        elif current_game_state == GameState.DIALOGUE:
+
+            board.render(screen, frame_count, current_game_state)
+
+            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 100))
+            screen.blit(overlay, (0, 0))
+
+            current_dialogue.render(screen, big_font, frame_count)
 
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
@@ -106,12 +123,22 @@ def main():
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
 
-                if current_game_state == GameState.RESULTS_SCREEN:
-                    if next_round_troops > 0 and next_button.check_click(pos):
-                        board = levels[level_idx+1].board
-                        level_idx += 1
-                        max_units = next_round_troops
+                if current_game_state == GameState.DIALOGUE:
+                    if current_dialogue.is_complete(frame_count):
+                        current_dialogue = current_dialogue.next
+                    if current_dialogue is None:
                         current_game_state = GameState.EDIT_TROOPS
+                elif current_game_state == GameState.RESULTS_SCREEN:
+
+                    if next_round_troops > 0 and next_button.check_click(pos):
+                        level_idx += 1
+                        board = levels[level_idx].board
+                        max_units = next_round_troops
+                        current_dialogue = levels[level_idx].opening_dialogue
+                        if current_dialogue is None:
+                            current_game_state = GameState.EDIT_TROOPS
+                        else:
+                            current_game_state = GameState.DIALOGUE
 
                 elif current_game_state == GameState.EDIT_TROOPS:
                     # Calculate row and column from click position

@@ -60,7 +60,7 @@ class Board:
 
                 # Render the unit if present (AND it's edit mode cuz if so, no animations)
                 # len(animations) == 0 is a total hack, to patch the first frame of play mode where animations haven't been populated yet
-                if tile.unit is not None and (game_state == GameState.EDIT_TROOPS or len(self.animations) == 0):
+                if tile.unit is not None and (game_state != GameState.PLAY_TROOPS or len(self.animations) == 0):
                     screen.blit(tile.unit.get_image(), (tile_x, tile_y))
 
                 # Darken tile if it is not passable or not placeable

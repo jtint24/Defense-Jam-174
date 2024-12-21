@@ -1,12 +1,15 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from board import Board, Unit, UnitType, Direction, Team
+from dialogue import Dialogue, opening_dialogue
 
 
 @dataclass
 class Level:
     board: Board
     name: str
+    opening_dialogue: Optional[Dialogue]
     bonus_troops: int
 
 
@@ -29,6 +32,7 @@ levels = [
             },
         ),
         "The best level ever",
+        opening_dialogue,
         bonus_troops=2
     ),
     Level(
@@ -69,6 +73,7 @@ levels = [
             }
         ),
         "The best level ever electric boogalo",
+        Dialogue.from_list([("Good show, jolly good show!", None, None)]),
         bonus_troops=4
     ),
 ]
