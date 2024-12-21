@@ -8,6 +8,7 @@ from pygame import MOUSEBUTTONDOWN
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
+from level import level_1
 from tile_images import PLAY_IMAGE
 from ui import ImageButton
 
@@ -17,32 +18,17 @@ pygame.init()
 # Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tile Board")
-
 def main():
-    board = Board.from_string(
-        [
-            "FGGWWWGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
-
-        ],
-        editable_columns={1, 2}
-    )
-
-    board.tiles[2][1].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-    board.tiles[1][1].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-    board.tiles[1][6].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-    board.tiles[2][6].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-    board.tiles[3][6].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-
-    play_button = ImageButton(SCREEN_WIDTH-64, SCREEN_HEIGHT-64, 64, 64, PLAY_IMAGE)
+    play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
 
     current_game_state = GameState.EDIT_TROOPS
     frame_count = 0
     running = True
+
+    board = level_1.board
+
+    # Maximum number of units allowed
+    max_units = 10
 
     while running:
         frame_count += 1
@@ -51,12 +37,20 @@ def main():
         # Render the board
         board.render(screen, current_game_state)
 
+        # Draw the play button
         play_button.draw(screen)
+
+        placed_units = board.get_number_of_units_by_team(Team.ORANGE)
+
+        # Render unit counter
+        font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8*6)
+        counter_text = f"Units: {placed_units}/{max_units}"
+        text_surface = font.render(counter_text, False, (0, 0, 0))
+        screen.blit(text_surface, (20, 20))  # Top-left corner
 
         pygame.display.flip()
 
         for event in pygame.event.get():
-
             if event.type == pygame.QUIT:
                 running = False
 
@@ -64,21 +58,30 @@ def main():
                 pos = pygame.mouse.get_pos()
 
                 if current_game_state == GameState.EDIT_TROOPS:
+                    # Calculate row and column from click position
                     col = (pos[0] - ((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
                     row = (pos[1] - ((SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
-                    if row < len(board.tiles) and col < len(board.tiles[0]):
-                        tile = board.tiles[row][col]
-                        if tile.unit is None:
-                            if board.tiles[row][col].is_free() and board.tiles[row][col].is_placeable:
-                                board.tiles[row][col].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-                        elif tile.unit.team is Team.ORANGE:
-                            board.tiles[row][col].unit = None
 
+                    # Ensure click is within bounds
+                    if 0 <= row < len(board.tiles) and 0 <= col < len(board.tiles[0]):
+                        tile = board.tiles[row][col]
+
+                        # Add or remove units based on current state
+                        if tile.unit is None:
+                            if placed_units < max_units and tile.is_free() and tile.is_placeable:
+                                tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
+                                placed_units += 1
+                        elif tile.unit.team is Team.ORANGE:
+                            tile.unit = None
+                            placed_units -= 1
+
+                    # Check if play button was clicked
                     if play_button.check_click(pos):
                         current_game_state = GameState.PLAY_TROOPS
 
         pygame.time.delay(20)
 
+        # Update board during PLAY_TROOPS phase
         if current_game_state == GameState.PLAY_TROOPS:
             if frame_count % 10 == 0:
                 update_change = board.update()

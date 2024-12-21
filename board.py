@@ -96,11 +96,14 @@ class Board:
         ]
 
     @classmethod
-    def from_string(cls, board_strs: List[str], editable_columns: Set[int]) -> Self:
+    def from_string(cls, board_strs: List[str], editable_columns: Set[int], units: Dict[Tuple[int, int], Unit]) -> Self:
         tiles = [cls.row_from_string(row_str) for row_str in board_strs]
         for row_idx, row in enumerate(tiles):
             for col_idx, tile in enumerate(row):
                 tiles[row_idx][col_idx].is_placeable = col_idx in editable_columns
+
+        for unit_point in units:
+            tiles[unit_point[0]][unit_point[1]].unit = units[unit_point]
 
         return Board(tiles)
 
@@ -397,6 +400,14 @@ class Board:
             return chain + [(row_idx, col_idx)]
         else:
             return None
+
+    def get_number_of_units_by_team(self, team: Team) -> int:
+        count = 0
+        for row_idx, row in enumerate(self.tiles):
+            for col_idx, tile in enumerate(row):
+                if tile.unit is not None and tile.unit.team == team:
+                    count += 1
+        return count
 
     def get_faced_tile(self, row_idx: int, col_idx: int) -> Tuple[Optional[Tile], int, int]:
         """
