@@ -10,6 +10,13 @@ from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORA
 from ui import Button
 
 
+class GameState(Enum):
+    TITLE_SCREEN = 1
+    EDIT_TROOPS = 2
+    PLAY_TROOPS = 3
+    RESULTS_SCREEN = 4
+
+
 class Direction(Enum):
     UP = 1
     DOWN = 2
@@ -58,10 +65,10 @@ class TileType(Enum):
 
 
 class Tile:
-    def __init__(self, type: TileType, unit: Optional[Unit], placeable: bool = True):
+    def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True):
         self.type = type
         self.unit = unit
-        self.placeable = placeable
+        self.is_placeable = is_placeable
 
     def is_free(self) -> bool:
         "Returns whether the tile is clear to walk on, based on tile type and other units on it"
@@ -71,6 +78,10 @@ class Tile:
 class Board:
     def __init__(self, tiles: List[List[Tile]]):
         self.tiles = tiles
+
+    @staticmethod
+    def to_dimensions(width: int, height: int):
+        return Board([[Tile()]])
 
     @staticmethod
     def row_from_string(row_str: str) -> List[Tile]:
@@ -83,12 +94,21 @@ class Board:
     def from_string(cls, board_strs: List[str]) -> Self:
         return Board([cls.row_from_string(row_str) for row_str in board_strs])
 
-    def render(self):
+    def render(self, game_state: GameState):
         for row_idx, row in enumerate(self.tiles):
             for col_idx, tile in enumerate(row):
+                # Render the tile image
                 screen.blit(tile.type.value.image, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
+
+                # Render the unit if present
                 if tile.unit is not None:
                     screen.blit(tile.unit.get_image(), (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
+
+                # Darken tile if it is not passable or not placeable
+                if game_state == GameState.EDIT_TROOPS and (not tile.type.value.is_passable or not tile.is_placeable):
+                    dark_surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                    dark_surface.fill((0, 0, 0, 100))  # Semi-transparent black overlay
+                    screen.blit(dark_surface, (col_idx * TILE_SIZE, row_idx * TILE_SIZE))
 
     def update(self):
         # Start by populating new_tiles with the base tiles (not units) from the current board
@@ -392,7 +412,7 @@ class InteractMode(Enum):
 def main():
     board = Board.from_string(
         [
-            "GGGGGGG",
+            "GGWWWGG",
             "GGGGGGG",
             "GGGGGGG",
         ]
@@ -409,18 +429,19 @@ def main():
     erase_button = Button(460, 400, 50, 30, "Erase", InteractMode.ERASE_MODE)
 
     # Start in add mode
-    current_mode = InteractMode.ADD_MODE
+    current_interact_mode = InteractMode.ADD_MODE
+    current_game_state = GameState.EDIT_TROOPS
 
     running = True
     while running:
         screen.fill((255, 255, 255))
 
         # Render the board
-        board.render()
+        board.render(current_game_state)
 
         # Render buttons
-        add_button.active = current_mode == InteractMode.ADD_MODE
-        erase_button.active = current_mode == InteractMode.ERASE_MODE
+        add_button.active = current_interact_mode == InteractMode.ADD_MODE
+        erase_button.active = current_interact_mode == InteractMode.ERASE_MODE
         add_button.draw(screen)
         erase_button.draw(screen)
 
@@ -436,23 +457,24 @@ def main():
 
                 # Check for button clicks
                 if add_button.check_click(pos):
-                    current_mode = InteractMode.ADD_MODE
+                    current_interact_mode = InteractMode.ADD_MODE
                 elif erase_button.check_click(pos):
-                    current_mode = InteractMode.ERASE_MODE
+                    current_interact_mode = InteractMode.ERASE_MODE
                 else:
                     # Handle board clicks
                     col = pos[0] // TILE_SIZE
                     row = pos[1] // TILE_SIZE
                     if row < len(board.tiles) and col < len(board.tiles[0]):
-                        if current_mode == InteractMode.ADD_MODE:
-                            if board.tiles[row][col].is_free() and board.tiles[row][col].placeable:
+                        if current_interact_mode == InteractMode.ADD_MODE:
+                            if board.tiles[row][col].is_free() and board.tiles[row][col].is_placeable:
                                 board.tiles[row][col].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-                        elif current_mode == InteractMode.ERASE_MODE:
+                        elif current_interact_mode == InteractMode.ERASE_MODE:
                             board.tiles[row][col].unit = None
 
-        pygame.time.delay(1000)
+        pygame.time.delay(20)
 
-        board.update()
+        if current_game_state == GameState.PLAY_TROOPS:
+            board.update()
 
     pygame.quit()
 
