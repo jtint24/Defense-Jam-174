@@ -16,13 +16,14 @@ level_1 = Level(
             "FGGGGGGGF",
             "FGGGGGGGF",
             "FGGGGGGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
+            "FGGWWWGGF",
 
         ],
         editable_columns={1, 2},
         units={
-            (2, 1): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+            (1, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
         }
     ),
     "The best level ever"

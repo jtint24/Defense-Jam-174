@@ -20,6 +20,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tile Board")
 def main():
     play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
+    font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
 
     current_game_state = GameState.EDIT_TROOPS
     frame_count = 0
@@ -28,7 +29,7 @@ def main():
     board = level_1.board
 
     # Maximum number of units allowed
-    max_units = 10
+    max_units = 2
 
     while running:
         frame_count += 1
@@ -43,10 +44,16 @@ def main():
         placed_units = board.get_number_of_units_by_team(Team.ORANGE)
 
         # Render unit counter
-        font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8*6)
         counter_text = f"Units: {placed_units}/{max_units}"
         text_surface = font.render(counter_text, False, (0, 0, 0))
-        screen.blit(text_surface, (20, 20))  # Top-left corner
+        screen.blit(text_surface, (20, 20))
+
+        orange_finished_surface = font.render(f"{board.finished_units_by_team[Team.ORANGE]}", False, (0,0,0))
+        apple_finished_surface = font.render(f"{board.finished_units_by_team[Team.APPLE]}", False, (0,0,0))
+
+        screen.blit(apple_finished_surface, (20, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
+        screen.blit(orange_finished_surface, (SCREEN_WIDTH-TILE_SIZE+10, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
+
 
         pygame.display.flip()
 

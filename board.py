@@ -87,6 +87,10 @@ class Tile:
 class Board:
     def __init__(self, tiles: List[List[Tile]]):
         self.tiles = tiles
+        self.finished_units_by_team = {
+            team: 0
+            for team in Team
+        }
 
     @staticmethod
     def row_from_string(row_str: str) -> List[Tile]:
@@ -153,6 +157,9 @@ class Board:
         for row_idx, col_idx in locked_units:
             if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
                 new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
+            else:
+                unit = self.tiles[row_idx][col_idx].unit
+                self.finished_units_by_team[unit.team] += 1
 
         change = self.tiles != new_tiles
         self.tiles = new_tiles
