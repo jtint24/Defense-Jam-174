@@ -25,4 +25,6 @@ ORANGE_TROOP_IMAGE = load_sprite_image("orange_troop")
 ORANGE_TANK_IMAGE = load_sprite_image("orange_tank")
 APPLE_IMAGE = load_sprite_image("apple")
 
+GENERAL_IMAGE = load_sprite_image("general")
+
 PLAY_IMAGE = load_button_image("play_button")

@@ -7,6 +7,7 @@ from pygame import MOUSEBUTTONDOWN
 
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
+from dialogue import opening_dialogue
 from gamestate import GameState
 from level import levels
 from tile_images import PLAY_IMAGE
@@ -21,6 +22,9 @@ pygame.display.set_caption("Tile Board")
 
 def main():
     big_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
+    small_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 4)
+    title_font = pygame.font.Font("resources/fonts/CDStitleUnicaseV.ttf", 8 * 8)
+
     play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
     next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
 
@@ -37,6 +41,10 @@ def main():
     troops_killed = 0
     next_round_troops = -1
 
+    current_dialogue = opening_dialogue
+
+    current_game_state = GameState.DIALOGUE
+
     while running:
         frame_count += 1
         screen.fill((255, 255, 255))
@@ -47,8 +55,8 @@ def main():
             next_round_troops = max_units + (bonus_troops if success else 0) - troops_killed
 
             result_text = "SUCCESS!" if success else "FAILURE!"
-            result_color = (0, 180, 40) if success else (255, 0, 0)
-            result_surface = big_font.render(result_text, False, result_color)
+            result_color = (106, 190, 48) if success else (172, 50, 50)
+            result_surface = title_font.render(result_text, False, result_color)
             result_rect = result_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
             screen.blit(result_surface, result_rect)
 
@@ -73,6 +81,9 @@ def main():
             # Show "Next Level" button only if the game is not over
             if next_round_troops > 0:
                 next_button.draw(screen)
+
+        elif current_game_state == GameState.DIALOGUE:
+            current_dialogue.render(screen, small_font, frame_count)
 
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
@@ -104,7 +115,11 @@ def main():
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
 
-                if current_game_state == GameState.RESULTS_SCREEN:
+                if current_game_state == GameState.DIALOGUE:
+                    current_dialogue = current_dialogue.next
+                    if current_dialogue is None:
+                        current_game_state = GameState.EDIT_TROOPS
+                elif current_game_state == GameState.RESULTS_SCREEN:
                     if next_round_troops > 0 and next_button.check_click(pos):
                         board = levels[level_idx+1].board
                         level_idx += 1
