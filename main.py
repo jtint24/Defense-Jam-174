@@ -33,7 +33,7 @@ def main():
     board = levels[level_idx].board
 
     max_units = 2
-    bonus_troops = 2  # Bonus for clearing the level
+    bonus_troops = 0  # Bonus for clearing the level
     troops_killed = 0
     next_round_troops = -1
 
@@ -42,6 +42,7 @@ def main():
         screen.fill((255, 255, 255))
 
         if current_game_state == GameState.RESULTS_SCREEN:
+            bonus_troops = levels[level_idx].bonus_troops
             success = board.finished_units_by_team[Team.ORANGE] > board.finished_units_by_team[Team.APPLE]
 
             next_round_troops = max_units + (bonus_troops if success else 0) - troops_killed
@@ -71,8 +72,9 @@ def main():
                     screen.blit(line_surface, line_rect)
 
             # Show "Next Level" button only if the game is not over
-            if next_round_troops > 0:
+            if next_round_troops > 0 and len(levels) > level_idx+1:
                 next_button.draw(screen)
+
 
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
@@ -126,6 +128,8 @@ def main():
                                 tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
+
+                    board.update_strenth_defense(frame_count)
 
                     # Check if play button was clicked
                     if play_button.check_click(pos):
