@@ -4,7 +4,7 @@ from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
 import pygame
 from pygame import Surface
 
-from animations import Animation, UnitMovementAnimation, StaticUnitAnimation
+from animations import Animation, UnitMovementAnimation, StaticUnitAnimation, UnitDeathAnimation, UnitWinAnimation
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
 from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE, \
@@ -95,7 +95,7 @@ class Board:
 
         # Then, place units in their new positions, detecting collisions where they exist
 
-        chains, locked_units = self.identify_chains()
+        chains, locked_units, victims = self.identify_chains()
 
         for chain in chains:
             for row_idx, col_idx in chain:
@@ -108,7 +108,11 @@ class Board:
             else:
                 unit = self.tiles[row_idx][col_idx].unit
                 self.finished_units_by_team[unit.team] += 1
-                # Unit DEATH animation goes here
+                # Unit Win!! animation goes here
+                self.animations.append(UnitWinAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+
+        for unit, row_idx, col_idx in victims:
+            self.animations.append(UnitDeathAnimation(frame, unit, col_to_x(col_idx), row_to_y(row_idx)))
 
         change = self.tiles != new_tiles
         self.tiles = new_tiles
@@ -208,17 +212,18 @@ class Board:
     class Conflict(NamedTuple):
         belligerent_coordinates: Set[Tuple[int, int]]
 
-    def identify_chains(self) -> Tuple[List[List[Tuple[int, int]]], Set[Tuple[int, int]]]:
+    def identify_chains(self) -> Tuple[List[List[Tuple[int, int]]], Set[Tuple[int, int]], List[Tuple[Unit, int, int]]]:
         """
         Returns a tuple with two elements.
         The first is a list of chains. Each chain has points in order of how they needed to move.
         The second is a list of units that cannot move.
-        The third is a list of units that are heading for conflict
+        The third is a list of units that are dying this turn
         Every unit is in a chain or it cannot move.
         """
         chains_starting_points = {}
         identified_unit_points = set()
         locked_unit_points = set()
+        victims = []
 
         stuck_unit_points = set()
 
@@ -295,6 +300,7 @@ class Board:
             survivor_coordinates = self.resolve_conflict(conflict)
             for b_row_idx, b_col_idx in conflict.belligerent_coordinates:
                 if (b_row_idx, b_col_idx) not in survivor_coordinates:
+                    victims.append((self.tiles[b_row_idx][b_col_idx].unit, b_row_idx, b_col_idx))
                     self.tiles[b_row_idx][b_col_idx].unit = None
 
         # Iterate over all units on the board, finding each ones' chain.
@@ -321,7 +327,7 @@ class Board:
                     else:
                         locked_unit_points.add((row_idx, col_idx))
 
-        return list(chains_starting_points.values()), locked_unit_points
+        return list(chains_starting_points.values()), locked_unit_points, victims
 
     def get_passing_conflict(self, opponent: Tuple[int, int], opp_claimed_square: Tuple[int, int],
                              squares_claimed_by_team: Dict[str, Dict[Tuple[int, int], List[Tuple[int, int]]]]) -> \

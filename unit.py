@@ -21,9 +21,18 @@ class UnitType(Enum):
     # TANK = 4
 
 
+
+
 class Team(Enum):
-    ORANGE = [ORANGE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE]
-    APPLE = [APPLE_IMAGE]
+    ORANGE = "ORANGE"
+    APPLE = "APPLE"
+
+
+def get_image_by_team(team: Team):
+    if team == Team.ORANGE:
+        return [ORANGE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE]
+    elif team == Team.APPLE:
+        return [APPLE_IMAGE]
 
 
 class Unit:
@@ -34,7 +43,7 @@ class Unit:
         self.defense = 1
 
     def get_image(self):
-        return self.team.value[self.type.value - 1]
+        return get_image_by_team(self.team)[self.type.value - 1]
 
     def __eq__(self, other: Self):
         return other is not None and (
@@ -43,6 +52,8 @@ class Unit:
                 self.team == other.team and
                 self.defense == other.defense
         )
+
+
 
 
 class TileTypeData(NamedTuple):
