@@ -1,6 +1,8 @@
 import pygame
+from pygame.font import Font
 
 from constants import BUTTON_ACTIVE_BG, BUTTON_BG, BUTTON_TEXT_COLOR
+
 
 
 class Drawable:
@@ -33,6 +35,27 @@ class ImageButton(Drawable):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect.topleft)
+        if False:
+            overlay = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
+            overlay.fill((255, 255, 255, 50))  # Semi-transparent white overlay
+            surface.blit(overlay, self.rect.topleft)
+
+    def check_click(self, pos):
+        return self.rect.collidepoint(pos)
+
+
+class TextButton(Drawable):
+    def __init__(self, x: int, y: int, width: int, height: int, label: str, font: Font):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.text = label
+        self.font = font
+
+    def draw(self, surface):
+        pygame.draw.rect(surface, (255, 255, 255), self.rect)
+        text_surface = self.font.render(self.text, True, BUTTON_TEXT_COLOR)
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        surface.blit(text_surface, text_rect)
+
         if False:
             overlay = pygame.Surface((self.rect.width, self.rect.height), pygame.SRCALPHA)
             overlay.fill((255, 255, 255, 50))  # Semi-transparent white overlay

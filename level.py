@@ -9,22 +9,43 @@ class Level:
     name: str
 
 
-level_1 = Level(
-    Board.from_string(
-        [
-            "FGGWWWGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
-            "FGGGGGGGF",
-            "FGGWWWGGF",
+levels = [
+    Level(
+        Board.from_string(
+            [
+                "FGGWWWGGF",
+                "FGGGGGGGF",
+                "FGGGGGGGF",
+                "FGGGGGGGF",
+                "FGGWWWGGF",
 
-        ],
-        editable_columns={1, 2},
-        units={
-            (1, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-            (2, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-            (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-        }
+            ],
+            editable_columns={1, 2},
+            units={
+                (1, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (2, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+            }
+        ),
+        "The best level ever"
     ),
-    "The best level ever"
-)
+    Level(
+        Board.from_string(
+            [
+                "FGGWWWGGF",
+                "FGGGGGGGF",
+                "FGGGWGGGF",
+                "FGGGGGGGF",
+                "FGGWWWGGF",
+
+            ],
+            editable_columns={1, 2},
+            units={
+                (1, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+            }
+        ),
+        "The best level ever"
+    ),
+]
