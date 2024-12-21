@@ -123,15 +123,21 @@ def main():
                 pos = pygame.mouse.get_pos()
 
                 if current_game_state == GameState.DIALOGUE:
-                    current_dialogue = current_dialogue.next
+                    if current_dialogue.is_complete(frame_count):
+                        current_dialogue = current_dialogue.next
                     if current_dialogue is None:
                         current_game_state = GameState.EDIT_TROOPS
                 elif current_game_state == GameState.RESULTS_SCREEN:
+
                     if next_round_troops > 0 and next_button.check_click(pos):
-                        board = levels[level_idx+1].board
                         level_idx += 1
+                        board = levels[level_idx].board
                         max_units = next_round_troops
-                        current_game_state = GameState.EDIT_TROOPS
+                        current_dialogue = levels[level_idx].opening_dialogue
+                        if current_dialogue is None:
+                            current_game_state = GameState.EDIT_TROOPS
+                        else:
+                            current_game_state = GameState.DIALOGUE
 
                 elif current_game_state == GameState.EDIT_TROOPS:
                     # Calculate row and column from click position

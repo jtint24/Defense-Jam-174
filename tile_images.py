@@ -12,8 +12,18 @@ def get_load_image_type(type: str):
 
 
 load_tile_image = get_load_image_type("tiles")
-load_sprite_image = get_load_image_type("sprite")
 load_button_image = get_load_image_type("button")
+
+
+def load_sprite_image(name: str) -> pygame.Surface:
+    raw_img = pygame.image.load(f"resources/sprite/{name}.png")
+    length, width = raw_img.get_size()
+    return pygame.transform.scale(raw_img, (length*4, width*4))
+
+def load_overlay_image(name: str) -> pygame.Surface:
+    raw_img = pygame.image.load(f"resources/overlays/{name}.png")
+    length, width = raw_img.get_size()
+    return pygame.transform.scale(raw_img, (length*6, width*6))
 
 
 GRASS_IMAGE = load_tile_image("grass")
@@ -28,3 +38,6 @@ APPLE_IMAGE = load_sprite_image("apple")
 GENERAL_IMAGE = load_sprite_image("general")
 
 PLAY_IMAGE = load_button_image("play_button")
+
+DEFENSE_OVERLAY = load_overlay_image("defense")
+OFFENSE_OVERLAY = load_overlay_image("offense")
