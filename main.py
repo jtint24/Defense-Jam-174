@@ -76,7 +76,7 @@ def main():
 
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
-            board.render(screen, current_game_state)
+            board.render(screen, current_game_state, frame_count)
 
             play_button.draw(screen)
 
@@ -124,10 +124,8 @@ def main():
                         if tile.unit is None:
                             if placed_units < max_units and tile.is_free() and tile.is_placeable:
                                 tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-                                placed_units += 1
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
-                            placed_units -= 1
 
                     # Check if play button was clicked
                     if play_button.check_click(pos):
@@ -137,8 +135,8 @@ def main():
 
         # Update board during PLAY_TROOPS phase
         if current_game_state == GameState.PLAY_TROOPS:
-            if frame_count % 10 == 0:
-                update_change = board.update()
+            if frame_count % 15 == 0:
+                update_change = board.update(frame_count)
                 if not update_change:
                     troops_killed = board.units_killed_by_team[Team.ORANGE]  # Replace with your method
                     current_game_state = GameState.RESULTS_SCREEN

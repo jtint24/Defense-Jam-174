@@ -4,84 +4,12 @@ from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
 import pygame
 from pygame import Surface
 
+from animations import Animation, UnitMovementAnimation, StaticUnitAnimation
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
 from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE, \
     FINISH_LINE_IMAGE
-
-
-class Direction(Enum):
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
-
-
-class UnitType(Enum):
-    SOLDIER = 1
-    HORSE = 2
-    CANNON = 3
-    # TANK = 4
-
-
-class Team(Enum):
-    ORANGE = [ORANGE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE]
-    APPLE = [APPLE_IMAGE]
-
-
-class Unit:
-    def __init__(self, type: UnitType, direction: Direction, team: Team):
-        self.type = type
-        self.direction = direction
-        self.team = team
-        self.defense = 1
-
-    def get_image(self):
-        return self.team.value[self.type.value - 1]
-
-    def __eq__(self, other: Self):
-        return other is not None and (
-                self.type == other.type and
-                self.direction == other.direction and
-                self.team == other.team and
-                self.defense == other.defense
-        )
-
-
-class TileTypeData(NamedTuple):
-    is_passable: bool
-    image: pygame.Surface
-    char_code: str
-
-
-class TileType(Enum):
-    GRASS = TileTypeData(True, GRASS_IMAGE, "G")
-    WATER = TileTypeData(False, WATER_IMAGE, "W")
-    FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
-
-    @classmethod
-    def from_str(cls, name: str):
-        for tile_type in TileType:
-            if tile_type.value.char_code == name:
-                return tile_type
-
-
-class Tile:
-    def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True):
-        self.type = type
-        self.unit = unit
-        self.is_placeable = is_placeable
-
-    def is_free(self) -> bool:
-        "Returns whether the tile is clear to walk on, based on tile type and other units on it"
-        return self.type.value.is_passable and self.unit is None
-
-    def __eq__(self, other: Self):
-        return other is not None and (
-            self.type == other.type and
-            self.unit == other.unit and
-            self.is_placeable == other.is_placeable
-        )
+from unit import Tile, Team, TileType, Unit, UnitType, Direction
 
 
 class Board:
@@ -95,6 +23,7 @@ class Board:
             team: 0
             for team in Team
         }
+        self.animations: List[Animation] = []
 
     @staticmethod
     def row_from_string(row_str: str) -> List[Tile]:
@@ -115,7 +44,7 @@ class Board:
 
         return Board(tiles)
 
-    def render(self, screen: Surface, game_state: GameState):
+    def render(self, screen: Surface, game_state: GameState, frame: int):
         # Calculate the offsets to center the board on the screen
         offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
         offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
@@ -129,8 +58,9 @@ class Board:
                 # Render the tile image
                 screen.blit(tile.type.value.image, (tile_x, tile_y))
 
-                # Render the unit if present
-                if tile.unit is not None:
+                # Render the unit if present (AND it's edit mode cuz if so, no animations)
+                # len(animations) == 0 is a total hack, to patch the first frame of play mode where animations haven't been populated yet
+                if tile.unit is not None and (game_state == GameState.EDIT_TROOPS or len(self.animations) == 0):
                     screen.blit(tile.unit.get_image(), (tile_x, tile_y))
 
                 # Darken tile if it is not passable or not placeable
@@ -138,9 +68,21 @@ class Board:
                     dark_surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
                     dark_surface.fill((0, 0, 0, 100))  # Semi-transparent black overlay
                     screen.blit(dark_surface, (tile_x, tile_y))
+        for animation in self.animations:
+            animation.draw(screen, frame)
 
-    def update(self) -> bool:
+    def update(self, frame: int) -> bool:
         "Returns whether the board changed during update"
+        offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
+        offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
+
+        def row_to_y(row_idx: int):
+            return row_idx * TILE_SIZE + offset_y
+
+        def col_to_x(col_idx: int):
+            return col_idx * TILE_SIZE + offset_x
+
+        self.animations = []
 
         # Start by populating new_tiles with the base tiles (not units) from the current board
         new_tiles = [
@@ -158,12 +100,15 @@ class Board:
         for chain in chains:
             for row_idx, col_idx in chain:
                 self.move_unit(new_tiles, row_idx, col_idx)
+                self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
         for row_idx, col_idx in locked_units:
             if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
                 new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
+                self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
             else:
                 unit = self.tiles[row_idx][col_idx].unit
                 self.finished_units_by_team[unit.team] += 1
+                # Unit DEATH animation goes here
 
         change = self.tiles != new_tiles
         self.tiles = new_tiles
@@ -183,7 +128,7 @@ class Board:
             for unit in unit_line:
                 unit.type = UnitType(min(3, len(unit_line)))
 
-        # And we update each troop's defense
+        # ... And we update each troop's defense
 
         for col_idx in range(len(self.tiles[0])):
             unit_line = []
