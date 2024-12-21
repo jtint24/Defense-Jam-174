@@ -6,7 +6,9 @@ from pygame import Surface
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
-from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE
+from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE, \
+    FINISH_LINE_IMAGE
+
 
 class Direction(Enum):
     UP = 1
@@ -47,6 +49,7 @@ class TileTypeData(NamedTuple):
 class TileType(Enum):
     GRASS = TileTypeData(True, GRASS_IMAGE, "G")
     WATER = TileTypeData(False, WATER_IMAGE, "W")
+    FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
 
     @classmethod
     def from_str(cls, name: str):

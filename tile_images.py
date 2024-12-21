@@ -18,6 +18,7 @@ load_button_image = get_load_image_type("button")
 
 GRASS_IMAGE = load_tile_image("grass")
 WATER_IMAGE = load_tile_image("water")
+FINISH_LINE_IMAGE = load_tile_image("finish_line")
 
 ORANGE_IMAGE = load_sprite_image("orange")
 ORANGE_TROOP_IMAGE = load_sprite_image("orange_troop")

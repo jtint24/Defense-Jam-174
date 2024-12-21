@@ -21,21 +21,24 @@ pygame.display.set_caption("Tile Board")
 def main():
     board = Board.from_string(
         [
-            "GGWWWGG",
-            "GGGGGGG",
-            "GGGGGGG",
+            "FGGWWWGGF",
+            "FGGGGGGGF",
+            "FGGGGGGGF",
+            "FGGGGGGGF",
+            "FGGGGGGGF",
+            "FGGGGGGGF",
+
         ],
-        editable_columns={0, 1}
+        editable_columns={1, 2}
     )
 
-    board.tiles[1][0].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-    board.tiles[0][1].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
+    board.tiles[2][1].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
     board.tiles[1][1].unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-    board.tiles[0][4].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-    board.tiles[1][4].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-    board.tiles[2][4].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+    board.tiles[1][6].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+    board.tiles[2][6].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+    board.tiles[3][6].unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
 
-    play_button = ImageButton(520, 400, 64, 64, PLAY_IMAGE)
+    play_button = ImageButton(SCREEN_WIDTH-64, SCREEN_HEIGHT-64, 64, 64, PLAY_IMAGE)
 
     current_game_state = GameState.EDIT_TROOPS
     frame_count = 0
@@ -61,8 +64,8 @@ def main():
                 pos = pygame.mouse.get_pos()
 
                 if current_game_state == GameState.EDIT_TROOPS:
-                    col = (pos[0] - (SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE)) // TILE_SIZE + 1
-                    row = (pos[1] - (SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE)) // TILE_SIZE
+                    col = (pos[0] - ((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
+                    row = (pos[1] - ((SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
                     if row < len(board.tiles) and col < len(board.tiles[0]):
                         tile = board.tiles[row][col]
                         if tile.unit is None:
@@ -73,7 +76,6 @@ def main():
 
                     if play_button.check_click(pos):
                         current_game_state = GameState.PLAY_TROOPS
-
 
         pygame.time.delay(20)
 
