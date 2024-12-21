@@ -13,6 +13,7 @@ def get_load_image_type(type: str):
 
 load_tile_image = get_load_image_type("tiles")
 load_sprite_image = get_load_image_type("sprite")
+load_button_image = get_load_image_type("button")
 
 
 GRASS_IMAGE = load_tile_image("grass")
@@ -22,3 +23,5 @@ ORANGE_IMAGE = load_sprite_image("orange")
 ORANGE_TROOP_IMAGE = load_sprite_image("orange_troop")
 ORANGE_TANK_IMAGE = load_sprite_image("orange_tank")
 APPLE_IMAGE = load_sprite_image("apple")
+
+PLAY_IMAGE = load_button_image("play_button")
