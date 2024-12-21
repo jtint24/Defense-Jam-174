@@ -81,7 +81,9 @@ def main():
 
         if current_game_state == GameState.PLAY_TROOPS:
             if frame_count % 10 == 0:
-                board.update()
+                update_change = board.update()
+                if not update_change:
+                    current_game_state = GameState.EDIT_TROOPS
 
     pygame.quit()
 

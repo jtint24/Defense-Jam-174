@@ -39,6 +39,14 @@ class Unit:
     def get_image(self):
         return self.team.value[self.type.value - 1]
 
+    def __eq__(self, other: Self):
+        return other is not None and (
+                self.type == other.type and
+                self.direction == other.direction and
+                self.team == other.team and
+                self.defense == other.defense
+        )
+
 
 class TileTypeData(NamedTuple):
     is_passable: bool
@@ -67,6 +75,13 @@ class Tile:
     def is_free(self) -> bool:
         "Returns whether the tile is clear to walk on, based on tile type and other units on it"
         return self.type.value.is_passable and self.unit is None
+
+    def __eq__(self, other: Self):
+        return other is not None and (
+            self.type == other.type and
+            self.unit == other.unit and
+            self.is_placeable == other.is_placeable
+        )
 
 
 class Board:
@@ -113,11 +128,13 @@ class Board:
                     dark_surface.fill((0, 0, 0, 100))  # Semi-transparent black overlay
                     screen.blit(dark_surface, (tile_x, tile_y))
 
-    def update(self):
+    def update(self) -> bool:
+        "Returns whether the board changed during update"
+
         # Start by populating new_tiles with the base tiles (not units) from the current board
         new_tiles = [
             [
-                Tile(tile.type, None)
+                Tile(tile.type, None, tile.is_placeable)
                 for tile in row
             ]
             for row in self.tiles
@@ -131,8 +148,10 @@ class Board:
             for row_idx, col_idx in chain:
                 self.move_unit(new_tiles, row_idx, col_idx)
         for row_idx, col_idx in locked_units:
-            new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
+            if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
+                new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
 
+        change = self.tiles != new_tiles
         self.tiles = new_tiles
 
         # Now, we update each troop's strength
@@ -165,6 +184,8 @@ class Board:
                     unit_line = []
             for unit in unit_line:
                 unit.defense = min(5, len(unit_line))
+
+        return change
 
     def resolve_conflict(self, conflict: "Conflict") -> Set[Tuple[int, int]]:
         team_damage = {team: 0 for team in Team}
