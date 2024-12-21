@@ -18,6 +18,8 @@ pygame.init()
 # Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tile Board")
+
+
 def main():
     play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
     font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
@@ -30,30 +32,63 @@ def main():
 
     # Maximum number of units allowed
     max_units = 2
+    bonus_troops = 2  # Bonus for clearing the level
+    troops_killed = 0
 
     while running:
         frame_count += 1
         screen.fill((255, 255, 255))
 
-        # Render the board
-        board.render(screen, current_game_state)
+        if current_game_state == GameState.RESULTS_SCREEN:
+            # Determine success or failure
+            success = board.finished_units_by_team[Team.ORANGE] > board.finished_units_by_team[Team.APPLE]
 
-        # Draw the play button
-        play_button.draw(screen)
+            # Calculate troops for next round
+            next_round_troops = max_units + (bonus_troops if success else 0) - troops_killed
 
-        placed_units = board.get_number_of_units_by_team(Team.ORANGE)
+            result_text = "SUCCESS!" if success else "FAILURE!"
+            result_color = (0, 180, 40) if success else (255, 0, 0)
+            result_surface = font.render(result_text, False, result_color)
+            result_rect = result_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
+            screen.blit(result_surface, result_rect)
 
-        # Render unit counter
-        counter_text = f"Units: {placed_units}/{max_units}"
-        text_surface = font.render(counter_text, False, (0, 0, 0))
-        screen.blit(text_surface, (20, 20))
+            # Labels for each calculation component
+            max_units_text = f"Base Troops: {max_units}"
+            clear_bonus_text = f"Clear Bonus: {bonus_troops if success else 0}"
+            killed_troops_text = f"Killed Troops: {-troops_killed}"
+            next_round_text = f"Troops for Next Round: {next_round_troops}"
 
-        orange_finished_surface = font.render(f"{board.finished_units_by_team[Team.ORANGE]}", False, (0,0,0))
-        apple_finished_surface = font.render(f"{board.finished_units_by_team[Team.APPLE]}", False, (0,0,0))
+            # Render and display each line
+            y_offset = SCREEN_HEIGHT // 3
+            line_spacing = 40  # Space between each line
 
-        screen.blit(apple_finished_surface, (20, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
-        screen.blit(orange_finished_surface, (SCREEN_WIDTH-TILE_SIZE+10, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
+            for i, text in enumerate([max_units_text, clear_bonus_text, killed_troops_text, next_round_text]):
+                line_surface = font.render(text, False, (0, 0, 0))
+                line_rect = line_surface.get_rect(center=(SCREEN_WIDTH // 2, y_offset + i * line_spacing))
+                screen.blit(line_surface, line_rect)
 
+
+        else:
+            # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
+            board.render(screen, current_game_state)
+
+            # Draw the play button
+            play_button.draw(screen)
+
+            placed_units = board.get_number_of_units_by_team(Team.ORANGE)
+
+            # Render unit counter
+            counter_text = f"Units: {placed_units}/{max_units}"
+            text_surface = font.render(counter_text, False, (0, 0, 0))
+            screen.blit(text_surface, (20, 20))
+
+            # Display finished units by team
+            orange_finished_surface = font.render(f"{board.finished_units_by_team[Team.ORANGE]}", False, (0, 0, 0))
+            apple_finished_surface = font.render(f"{board.finished_units_by_team[Team.APPLE]}", False, (0, 0, 0))
+
+            screen.blit(apple_finished_surface, (20, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
+            screen.blit(orange_finished_surface,
+                        (SCREEN_WIDTH - TILE_SIZE + 10, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
 
         pygame.display.flip()
 
@@ -93,7 +128,8 @@ def main():
             if frame_count % 10 == 0:
                 update_change = board.update()
                 if not update_change:
-                    current_game_state = GameState.EDIT_TROOPS
+                    troops_killed = board.units_killed_by_team[Team.ORANGE]  # Replace with your method
+                    current_game_state = GameState.RESULTS_SCREEN
 
     pygame.quit()
 

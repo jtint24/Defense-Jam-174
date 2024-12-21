@@ -91,6 +91,10 @@ class Board:
             team: 0
             for team in Team
         }
+        self.units_killed_by_team = {
+            team: 0
+            for team in Team
+        }
 
     @staticmethod
     def row_from_string(row_str: str) -> List[Tile]:
@@ -244,6 +248,11 @@ class Board:
 
         if len(survivors) == len(sorted_belligerents):
             survivors.difference_update(weakest_unit_coordinates)
+
+        for b_row_idx, b_col_idx in sorted_belligerents:
+            if (b_row_idx, b_col_idx) not in survivors:
+                unit = self.tiles[b_row_idx][b_col_idx].unit
+                self.units_killed_by_team[unit.team] += 1
 
         return survivors
 
