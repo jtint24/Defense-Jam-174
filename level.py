@@ -17,14 +17,14 @@ levels = [
     Level(
         Board.from_string(
             [
-                "FGGWWWGGF",
                 "FGGGGGGGF",
-                "FGGGGGTGF",
+                "FGGGGGGGF",
+                "FGGGGGGGF",
                 "FGGGGGGGF",
                 "FGGWWWGGF",
 
             ],
-            editable_columns={1, 2, 3},
+            editable_columns={1, 2},
             units={
                 (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
                 (2, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
@@ -45,7 +45,7 @@ levels = [
                 "FGGWWWGGF",
 
             ],
-            editable_columns={1, 2, 3},
+            editable_columns={1, 2},
             units={
                 (1, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
                 (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),

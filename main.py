@@ -102,19 +102,35 @@ def main():
             play_button.draw(screen)
 
             placed_units = board.get_number_of_units_by_team(Team.ORANGE)
-
-            # Render unit counter
             counter_text = f"Units: {placed_units}/{max_units}"
-            text_surface = big_font.render(counter_text, False, (0, 0, 0))
-            screen.blit(text_surface, (20, 20))
+            counter_surface = big_font.render(counter_text, True, (0, 0, 0))
+            counter_rect = counter_surface.get_rect(topleft=(20, 20))
+            pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
+            screen.blit(counter_surface, counter_rect)
 
             # Display finished units by team
-            orange_finished_surface = big_font.render(f"{board.finished_units_by_team[Team.ORANGE]}", False, (0, 0, 0))
-            apple_finished_surface = big_font.render(f"{board.finished_units_by_team[Team.APPLE]}", False, (0, 0, 0))
+            orange_finished_surface = big_font.render(
+                f"{board.finished_units_by_team[Team.ORANGE]}", True, (0, 0, 0)
+            )
+            apple_finished_surface = big_font.render(
+                f"{board.finished_units_by_team[Team.APPLE]}", True, (0, 0, 0)
+            )
 
-            screen.blit(apple_finished_surface, (20, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
-            screen.blit(orange_finished_surface,
-                        (SCREEN_WIDTH - TILE_SIZE + 10, ((SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2)))
+            # Calculate Y-position for team counters
+            team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2
+
+            # Apple team's finished units
+            if current_game_state == GameState.PLAY_TROOPS:
+                apple_rect = apple_finished_surface.get_rect(topleft=(20, team_counters_y))
+                pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
+                screen.blit(apple_finished_surface, apple_rect)
+
+                # Orange team's finished units
+                orange_rect = orange_finished_surface.get_rect(
+                    topleft=(SCREEN_WIDTH - TILE_SIZE + 10, team_counters_y)
+                )
+                pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
+                screen.blit(orange_finished_surface, orange_rect)
 
         pygame.display.flip()
 
@@ -146,10 +162,12 @@ def main():
                 if current_game_state == GameState.DIALOGUE:
                     if current_dialogue.is_complete(frame_count):
                         current_dialogue = current_dialogue.next
+                    else:
+                        current_dialogue.first_appear_frame = -10000
                     if current_dialogue is None:
                         current_game_state = GameState.EDIT_TROOPS
-                elif current_game_state == GameState.RESULTS_SCREEN:
 
+                elif current_game_state == GameState.RESULTS_SCREEN:
                     if next_round_troops > 0 and next_button.check_click(pos):
                         level_idx += 1
                         board = levels[level_idx].board
@@ -197,7 +215,7 @@ def main():
                         # Add or remove units based on current state
                         if mode == 1:
                             if tile.unit is None:
-                                if  tile.is_free() and not tile.is_placeable:
+                                if tile.is_free() and not tile.is_placeable:
                                     print("Adding Unit")
                                     tile.unit = Unit(UnitType.SOLDIER, Direction.UP, Team.APPLE)
                             elif tile.unit.team is Team.ORANGE:
@@ -215,8 +233,6 @@ def main():
                         elif mode == 4:
                             if tile.type == TileType.TRAMPOLINE:
                                 tile.rotate_cw()
-
-
 
                     board.update_strenth_defense(frame_count)
 
