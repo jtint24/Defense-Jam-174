@@ -145,7 +145,7 @@ class Tile:
     def render(self, screen: Surface, tile_x, tile_y):
         match self.type:
             case TileType.TRAMPOLINE:
-                if self.extra_data.rotation == Direction.RIGHT or self.extra_data.rotation == Direction.LEFT:
+                if self.rotation == Direction.RIGHT or self.rotation == Direction.LEFT:
                     screen.blit(self.type.value.image, (tile_x, tile_y))
                 else:
                     screen.blit(pygame.transform.flip(self.type.value.image, True, False), (tile_x, tile_y))
@@ -153,30 +153,30 @@ class Tile:
                 screen.blit(self.type.value.image, (tile_x, tile_y))
 
     def rotate_cw(self):
-        match self.extra_data.rotation:
+        match self.rotation:
             case Direction.UP:
-                self.extra_data = ExtraData(Direction.RIGHT, None, None)
+                self.rotation = Direction.RIGHT
             case Direction.RIGHT:
-                self.extra_data = ExtraData(Direction.DOWN, None, None)
+                self.rotation = Direction.DOWN
             case Direction.DOWN:
-                self.extra_data = ExtraData(Direction.LEFT, None, None)
+                self.rotation = Direction.LEFT
             case _:
-                self.extra_data = ExtraData(Direction.UP, None, None)
+                self.rotation = Direction.UP
 
     def rotate_ccw(self):
-        match self.extra_data.rotation:
+        match self.rotation.rotation:
             case Direction.UP:
-                self.extra_data = ExtraData(Direction.LEFT, None, None)
+                self.rotation = Direction.LEFT
             case Direction.RIGHT:
-                self.extra_data = ExtraData(Direction.UP, None, None)
+                self.rotation = Direction.UP
             case Direction.DOWN:
-                self.extra_data = ExtraData(Direction.RIGHT, None, None)
+                self.rotation = Direction.RIGHT
             case _:
-                self.extra_data = ExtraData(Direction.DOWN, None, None)
+                self.rotation = Direction.DOWN
 
     def trampoline_bounce_calculator(self):
         if self.unit is not None and self.type == TileType.TRAMPOLINE:
-            if self.extra_data.rotation == Direction.RIGHT or self.extra_data.rotation == Direction.LEFT:
+            if self.rotation == Direction.RIGHT or self.rotation == Direction.LEFT:
                 if self.unit.direction == Direction.RIGHT or self.unit.direction == Direction.LEFT:
                     self.unit.rotate_ccw()
                 else:
