@@ -25,6 +25,7 @@ class Board:
             for team in Team
         }
         self.animations: List[Animation] = []
+        self.updates = 0
 
     @staticmethod
     def row_from_string(row_str: str) -> List[Tile]:
@@ -85,6 +86,7 @@ class Board:
         "Returns whether the board changed during update"
 
         self.animations = []
+        self.updates += 1
 
         # Start by populating new_tiles with the base tiles (not units) from the current board
         new_tiles = [

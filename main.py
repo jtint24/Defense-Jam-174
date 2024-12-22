@@ -109,7 +109,7 @@ def main():
             play_button.draw(screen)
 
             placed_units = board.get_number_of_units_by_team(Team.ORANGE)
-            counter_text = f"Units: {placed_units}/{max_units}"
+            counter_text = f"Units: {placed_units}/{max_units - board.units_killed_by_team[Team.ORANGE]}"
             counter_surface = big_font.render(counter_text, True, (0, 0, 0))
             counter_rect = counter_surface.get_rect(topleft=(20, 20))
             pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
@@ -205,7 +205,7 @@ def main():
 
                         # Add or remove units based on current state
                         if tile.unit is None:
-                            if placed_units < max_units and tile.is_free() and tile.is_placeable:
+                            if placed_units < max_units - board.units_killed_by_team[Team.ORANGE] and tile.is_free() and tile.is_placeable:
                                 tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
@@ -262,9 +262,15 @@ def main():
         if current_game_state == GameState.PLAY_TROOPS:
             if frame_count % 15 == 0:
                 update_change = board.update(frame_count)
+
                 if not update_change:
-                    troops_killed = board.units_killed_by_team[Team.ORANGE]  # Replace with your method
+                    troops_killed = board.units_killed_by_team[Team.ORANGE]
                     current_game_state = GameState.RESULTS_SCREEN
+
+                elif board.updates % 10 == 0:
+                    current_game_state = GameState.EDIT_TROOPS
+                    board.animations = []
+                    board.update_strength_defense(frame_count)
 
     pygame.quit()
 
