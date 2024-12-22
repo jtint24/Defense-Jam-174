@@ -17,11 +17,12 @@ levels = [
     Level(
         Board.from_string(
             [
-                "FGGWWGF",
-                "FGGGGGF",
-                "FGGGGGF",
-                "FGGGGGF",
-                "FGGWWGF",
+
+                "FGGWWWGGF",
+                "FGGGGGGGF",
+                "FGGGGGRGF",
+                "FGGGGGGGF",
+                "FGGWWWGGF",
 
             ],
             editable_columns={1, 2},

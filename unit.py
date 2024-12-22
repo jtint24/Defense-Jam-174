@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Self, Optional, NamedTuple
+from typing import Self, Optional, NamedTuple, Tuple
 
 import pygame
 from pygame import Surface
@@ -95,6 +95,7 @@ class Unit:
                 case _:
                     return retval
 
+
     def __eq__(self, other: Self):
         return other is not None and (
                 self.type == other.type and
@@ -116,6 +117,9 @@ class TileType(Enum):
     GRASS = TileTypeData(True, GRASS_IMAGE, "G")
     WATER = TileTypeData(False, WATER_IMAGE, "W")
     TRAMPOLINE = TileTypeData(True, TRAMPOLINE_SLASH, "T")
+    WALL = TileTypeData(False, WATER_IMAGE, "L")
+    DEADWALL = TileTypeData(True, GRASS_IMAGE, "D")
+    TRAPDOOR = TileTypeData(True, GRASS_IMAGE, "R")
     FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
 
     @classmethod
@@ -124,19 +128,15 @@ class TileType(Enum):
             if tile_type.value.char_code == name:
                 return tile_type
 
-class ExtraData(NamedTuple):
-    rotation: Direction
-    destination: tuple[int]
-
 class Tile:
-    def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, extra_data: ExtraData=None):
+    def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, health:int = 5,
+                 rotation:Direction = Direction.RIGHT, destination:Tuple[int] = (0, 0)):
         self.type = type
         self.unit = unit
         self.is_placeable = is_placeable
-        if extra_data is not None:
-            self.extra_data = extra_data
-        else:
-            self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
+        self.health = health
+        self.rotation = rotation
+        self.destination = destination
 
     def is_free(self) -> bool:
         "Returns whether the tile is clear to walk on, based on tile type and other units on it"
@@ -155,26 +155,26 @@ class Tile:
     def rotate_cw(self):
         match self.extra_data.rotation:
             case Direction.UP:
-                self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
+                self.extra_data = ExtraData(Direction.RIGHT, None, None)
             case Direction.RIGHT:
-                self.extra_data = ExtraData(Direction.DOWN, [0, 0])
+                self.extra_data = ExtraData(Direction.DOWN, None, None)
             case Direction.DOWN:
-                self.extra_data = ExtraData(Direction.LEFT, [0, 0])
+                self.extra_data = ExtraData(Direction.LEFT, None, None)
             case _:
-                self.extra_data = ExtraData(Direction.UP, [0, 0])
+                self.extra_data = ExtraData(Direction.UP, None, None)
 
     def rotate_ccw(self):
         match self.extra_data.rotation:
             case Direction.UP:
-                self.extra_data = ExtraData(Direction.LEFT, [0, 0])
+                self.extra_data = ExtraData(Direction.LEFT, None, None)
             case Direction.RIGHT:
-                self.extra_data = ExtraData(Direction.UP, [0, 0])
+                self.extra_data = ExtraData(Direction.UP, None, None)
             case Direction.DOWN:
-                self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
+                self.extra_data = ExtraData(Direction.RIGHT, None, None)
             case _:
-                self.direction = ExtraData(Direction.DOWN, [0, 0])
+                self.extra_data = ExtraData(Direction.DOWN, None, None)
 
-    def get_reflection(self):
+    def trampoline_bounce_calculator(self):
         if self.unit is not None and self.type == TileType.TRAMPOLINE:
             if self.extra_data.rotation == Direction.RIGHT or self.extra_data.rotation == Direction.LEFT:
                 if self.unit.direction == Direction.RIGHT or self.unit.direction == Direction.LEFT:
@@ -190,6 +190,9 @@ class Tile:
         return other is not None and (
             self.type == other.type and
             self.unit == other.unit and
-            self.is_placeable == other.is_placeable
+            self.is_placeable == other.is_placeable and
+            self.health == other.health and
+            self.destination == other.destination and
+            self.rotation == other.rotation
         )
 

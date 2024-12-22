@@ -210,7 +210,9 @@ def main():
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
 
+
                     board.animations = []
+  
                     board.update_strength_defense(frame_count)
 
                     # Check if play button was clicked
@@ -243,6 +245,12 @@ def main():
                             if tile.type == TileType.GRASS:
                                 tile.type = TileType.WATER
                             elif tile.type == TileType.WATER:
+                                tile.type = TileType.WALL
+                            elif tile.type == TileType.WALL:
+                                tile.type = TileType.TRAPDOOR
+                            elif tile.type == TileType.TRAPDOOR:
+                                tile.type = TileType.FINISH_LINE
+                            else:
                                 tile.type = TileType.GRASS
                         elif mode == 3:
                             if tile.unit is not None:
@@ -250,6 +258,7 @@ def main():
                         elif mode == 4:
                             if tile.type == TileType.TRAMPOLINE:
                                 tile.rotate_cw()
+
 
                     board.update_strength_defense(frame_count)
 

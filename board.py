@@ -10,7 +10,7 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
 from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE, \
     FINISH_LINE_IMAGE
-from unit import Tile, Team, TileType, Unit, UnitType, Direction
+from unit import Tile, Team, TileType, Unit, UnitType, Direction, ExtraData
 
 
 class Board:
@@ -91,10 +91,11 @@ class Board:
         # Start by populating new_tiles with the base tiles (not units) from the current board
         new_tiles = [
             [
-                Tile(tile.type, None, tile.is_placeable)
+                Tile(tile.type, None, tile.is_placeable, tile.health, tile.rotation, tile.destination)
                 for tile in row
             ]
             for row in self.tiles
+
         ]
 
         # Then, place units in their new positions, detecting collisions where they exist
@@ -104,27 +105,47 @@ class Board:
         for chain in chains:
             for row_idx, col_idx in chain:
                 self.move_unit(new_tiles, row_idx, col_idx)
-                if new_tiles[row_idx][col_idx].type != TileType.TRAMPOLINE:
-                    self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
-                else:
-                    self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
+                if self.get_faced_tile(row_idx, col_idx)[0].type != TileType.TRAPDOOR:
+                    if new_tiles[row_idx][col_idx].type != TileType.TRAMPOLINE:
+                        print("Animate 1")
+                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                    else:
+                        print("Animate 2")
+                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
         for row_idx, col_idx in locked_units:
             if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
                 new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
-                self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
+                if self.tiles[row_idx][col_idx].type != TileType.TRAPDOOR:
+                    print("Animate 3")
+                    self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
             else:
                 unit = self.tiles[row_idx][col_idx].unit
                 self.finished_units_by_team[unit.team] += 1
                 # Unit Win!! animation goes here
-                self.animations.append(UnitWinAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
+                print("Animate 4")
+                self.animations.append(UnitWinAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
 
         for unit, row_idx, col_idx in victims:
-            self.animations.append(UnitDeathAnimation(frame, unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
+            print("Animate 5")
+            self.animations.append(UnitDeathAnimation(frame, unit, col_to_x(col_idx), row_to_y(row_idx)))
 
-        for row_idx, row in enumerate(self.tiles):
-            unit_line = []
+        #logic for all relevant items
+        for row_idx, row in enumerate(new_tiles):
             for col_idx, tile in enumerate(row):
-                new_tiles[row_idx][col_idx].get_reflection()
+                if tile.unit is not None:
+                    #Trampolines
+                    tile.trampoline_bounce_calculator()
+                    if self.tiles[row_idx][col_idx].type == TileType.TRAPDOOR:
+                        self.animations.append(UnitDeathAnimation(frame, tile.unit, col_to_x(col_idx), row_to_y(row_idx)))
+                        new_tiles[row_idx][col_idx].unit = None
+                    else:
+                        #Walls
+                        faced_tile, faced_row, faced_col = self.get_new_faced_tile(new_tiles, row_idx, col_idx)
+                        if faced_tile is not None and faced_tile.type == TileType.WALL:
+                            if faced_tile.health > tile.unit.type.value:
+                                faced_tile.health -= tile.unit.type.value
+                            else:
+                                new_tiles[faced_row][faced_col] = Tile(TileType.DEADWALL, None, faced_tile.is_placeable)
         change = self.tiles != new_tiles
         self.tiles = new_tiles
 
@@ -426,5 +447,27 @@ class Board:
 
         if 0 <= row_idx < len(self.tiles) and 0 <= col_idx < len(self.tiles[row_idx]):
             return self.tiles[row_idx][col_idx], row_idx, col_idx
+        return None, row_idx, col_idx
+
+    def get_new_faced_tile(self, new_tiles: List[List[Tile]], row_idx: int, col_idx: int) -> Tuple[Optional[Tile], int, int]:
+        """
+        Gets the tile faced by a unit at a row, col. If the tile faces the edge, gives None
+        """
+
+        facing_tile = new_tiles[row_idx][col_idx]
+
+        if facing_tile.unit.direction == Direction.RIGHT:
+            row_idx, col_idx = row_idx, col_idx + 1
+        elif facing_tile.unit.direction == Direction.LEFT:
+            row_idx, col_idx = row_idx, col_idx - 1
+        elif facing_tile.unit.direction == Direction.UP:
+            row_idx, col_idx = row_idx - 1, col_idx
+        elif facing_tile.unit.direction == Direction.DOWN:
+            row_idx, col_idx = row_idx + 1, col_idx
+
+        # Add more logic for different types of units, if necessary...
+
+        if 0 <= row_idx < len(new_tiles) and 0 <= col_idx < len(new_tiles[row_idx]):
+            return new_tiles[row_idx][col_idx], row_idx, col_idx
         return None, row_idx, col_idx
 
