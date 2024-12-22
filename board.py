@@ -52,7 +52,6 @@ class Board:
         rect = pygame.Rect(offset_x - 8, offset_y - 8, TILE_SIZE * len(self.tiles[0]) + 16, TILE_SIZE* len(self.tiles) + 16)
         pygame.draw.rect(screen, (0,0,0), rect, width=8)
 
-
         for row_idx, row in enumerate(self.tiles):
             for col_idx, tile in enumerate(row):
                 # Calculate the screen position of the tile
@@ -203,9 +202,10 @@ class Board:
 
     def resolve_conflict(self, conflict: "Conflict") -> Set[Tuple[int, int]]:
         team_damage = {team: 0 for team in Team}
-
+        belligerent_coordinates = [c for c in conflict.belligerent_coordinates if self.tiles[c[0]][c[1]].unit is not None]
+        print([c for c in conflict.belligerent_coordinates if self.tiles[c[0]][c[1]].unit is None])
         sorted_belligerents = sorted(
-            conflict.belligerent_coordinates,
+            belligerent_coordinates,
             key=lambda coordinate: self.tiles[coordinate[0]][coordinate[1]].unit.defense,
             reverse=True
         )
@@ -293,7 +293,7 @@ class Board:
                 if tile.unit is not None:
                     faced_tile, f_row_idx, f_col_idx = self.get_faced_tile(row_idx, col_idx)
 
-                    if faced_tile is not None:
+                    if faced_tile is not None and faced_tile.type.value.is_passable:
                         for team in squares_claimed_by_team:
                             if (f_row_idx, f_col_idx) in squares_claimed_by_team[team]:
                                 other_claimants = squares_claimed_by_team[team][(f_row_idx, f_col_idx)]
