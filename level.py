@@ -19,7 +19,7 @@ levels = [
             [
                 "FGGWWWGGF",
                 "FGGGGGGGF",
-                "FGGGGGTGF",
+                "FGGGGGRGF",
                 "FGGGGGGGF",
                 "FGGWWWGGF",
 
