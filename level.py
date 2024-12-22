@@ -221,6 +221,44 @@ Level(
         bonus_troops=3
     ),
 
+Level(
+    Board.from_string(
+        [
+            "FGGGGGGGRGGGF",
+            "FGGGGGGGRGGGF",
+            "FGGGGLGGGGGGF",
+            "FGGGGLGGGGGGF",
+            "FGGGGLGGGGGGF",
+            "FWGGGGGGGGGGF",
+        ],
+        editable_columns={1, 2, 3, 4},
+        units={
+            (0, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (0, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (5, 10): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (5, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 10): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+
+        }
+        ),
+        "The Final Battle",
+        Dialogue.from_list(
+            [
+                ("Hmm... the final battle!", GENERAL_IMAGE, None),
+                ("But that means...", GENERAL_IMAGE, None),
+                ("That's right, you old man! I'm here!", GENERAL_APPLE_IMAGE, None),
+                ("I'm throwing all my remaining troops at you!", GENERAL_APPLE_IMAGE, None),
+                ("You and your corporal should prepare to face your demise!", GENERAL_APPLE_IMAGE, None),
+            ]
+        ),
+        bonus_troops=3
+    ),
 
 
 
