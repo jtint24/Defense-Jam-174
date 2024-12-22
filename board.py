@@ -4,7 +4,8 @@ from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
 import pygame
 from pygame import Surface
 
-from animations import Animation, UnitMovementAnimation, StaticUnitAnimation, UnitDeathAnimation, UnitWinAnimation
+from animations import Animation, UnitMovementAnimation, StaticUnitAnimation, UnitDeathAnimation, UnitWinAnimation, \
+    FlankAnimation
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
 from tile_images import GRASS_IMAGE, WATER_IMAGE, ORANGE_IMAGE, APPLE_IMAGE, ORANGE_TROOP_IMAGE, ORANGE_TANK_IMAGE, \
@@ -24,6 +25,7 @@ class Board:
             for team in Team
         }
         self.animations: List[Animation] = []
+        self.updates = 0
 
     @staticmethod
     def row_from_string(row_str: str) -> List[Tile]:
@@ -69,20 +71,22 @@ class Board:
                     dark_surface.fill((0, 0, 0, 100))  # Semi-transparent black overlay
                     screen.blit(dark_surface, (tile_x, tile_y))
         for animation in self.animations:
-            animation.draw(screen, frame)
+            animation.draw(screen, frame, game_state)
+
+    def row_to_y(self, row_idx: int):
+        offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
+        return row_idx * TILE_SIZE + offset_y
+
+    def col_to_x(self, col_idx: int):
+        offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
+
+        return col_idx * TILE_SIZE + offset_x
 
     def update(self, frame: int) -> bool:
         "Returns whether the board changed during update"
-        offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
-        offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
-
-        def row_to_y(row_idx: int):
-            return row_idx * TILE_SIZE + offset_y
-
-        def col_to_x(col_idx: int):
-            return col_idx * TILE_SIZE + offset_x
 
         self.animations = []
+        self.updates += 1
 
         # Start by populating new_tiles with the base tiles (not units) from the current board
         new_tiles = [
@@ -167,17 +171,35 @@ class Board:
 
         for col_idx in range(len(self.tiles[0])):
             unit_line = []
+            start_row_idx = 0
             for row_idx in range(len(self.tiles)):
                 tile = self.tiles[row_idx][col_idx]
 
-                if tile.unit is not None and (len(unit_line) == 0 or tile.unit.team == unit_line[0].team):
+                if tile.unit is not None and len(unit_line) == 0:
+                    unit_line.append(tile.unit)
+                    start_row_idx = row_idx
+                elif tile.unit is not None and tile.unit.team == unit_line[0].team:
                     unit_line.append(tile.unit)
                 else:
                     for unit in unit_line:
                         unit.defense = min(5, len(unit_line))
-                    unit_line = []
+                    if tile.unit is not None:
+                        start_row_idx = row_idx
+                        if len(unit_line) > 1:
+                            self.animations.append(
+                                FlankAnimation(frame, self.row_to_y(start_row_idx), self.row_to_y(row_idx - 1),
+                                               self.col_to_x(col_idx)))
+                        unit_line = [tile.unit]
+                    else:
+                        if len(unit_line) > 1:
+                            self.animations.append(FlankAnimation(frame,  self.row_to_y(start_row_idx), self.row_to_y(row_idx),
+                                                                  self.col_to_x(col_idx)))
+                        unit_line = []
+
             for unit in unit_line:
                 unit.defense = min(5, len(unit_line))
+            if len(unit_line) > 1:
+                self.animations.append(FlankAnimation(self.row_to_y(start_row_idx), self.row_to_y(len(self.tiles)-1), self.col_to_x(col_idx)))
 
     def resolve_conflict(self, conflict: "Conflict") -> Set[Tuple[int, int]]:
         team_damage = {team: 0 for team in Team}

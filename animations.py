@@ -2,6 +2,7 @@ import math
 
 import pygame
 
+from gamestate import GameState
 from unit import Unit, Direction
 from constants import TILE_SIZE
 
@@ -9,12 +10,12 @@ class Animation:
     def __init__(self):
         raise NotImplemented
 
-    def draw(self, screen: pygame.Surface, current_frame: int):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
         raise NotImplemented
 
 
-class UnitAnimation:
-    def __init__(self, start_frame: int, unit: Unit, x: int, y: int, direction:Direction =None):
+class UnitAnimation(Animation):
+    def __init__(self, start_frame: int, unit: Unit, x: int, y: int, direction: Direction = None):
         self.start_frame = start_frame
         self.x = x
         self.y = y
@@ -26,12 +27,12 @@ class UnitAnimation:
 
 
 class StaticUnitAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
         screen.blit(self.unit.get_image(), (self.x, self.y))
 
 
 class UnitMovementAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
         d_x, d_y = {
             Direction.LEFT: (-1, 0),
             Direction.RIGHT: (1, 0),
@@ -59,7 +60,7 @@ class UnitMovementAnimation(UnitAnimation):
 
 
 class UnitDeathAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
         animation_frame = current_frame - self.start_frame
 
         total_frames = 15
@@ -88,7 +89,7 @@ class UnitDeathAnimation(UnitAnimation):
 
 
 class UnitWinAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
 
         animation_frame = current_frame - self.start_frame
 
@@ -110,3 +111,32 @@ class UnitWinAnimation(UnitAnimation):
         image.set_alpha(alpha)
 
         screen.blit(image, (self.x, render_y))
+
+
+class FlankAnimation(Animation):
+    def __init__(self, start_frame: int, start_y: int, end_y: int, x: int):
+        self.start_y = start_y
+        self.end_y = end_y
+        self.x = x
+        self.start_frame = start_frame
+
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
+        if game_state == GameState.EDIT_TROOPS:
+            t = ((current_frame - self.start_frame) % 30) / 30
+            alpha = int(200 * (math.sin(t*math.pi*2)+1)/2)
+        else:
+            t = ((current_frame - self.start_frame) % 15) / 15
+            alpha = int(200 * min(1, 2 * pow(t, 2)))
+        color = (255, 128, 0)
+
+        # Create a surface with per-pixel alpha
+        temp_surface = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+
+        # Draw the rectangle on the temporary surface
+        rect = pygame.Rect(self.x + 8, self.start_y + 8, TILE_SIZE - 16, self.end_y - self.start_y - 16)
+        pygame.draw.rect(temp_surface, (*color, alpha), rect, width=4)
+
+        # Blit the temporary surface onto the main screen
+        screen.blit(temp_surface, (0, 0))
+
+

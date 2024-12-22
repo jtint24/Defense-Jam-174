@@ -17,6 +17,7 @@ levels = [
     Level(
         Board.from_string(
             [
+
                 "FGGWWWGGF",
                 "FGGGGGGGF",
                 "FGGGGGRGF",
@@ -24,11 +25,11 @@ levels = [
                 "FGGWWWGGF",
 
             ],
-            editable_columns={1, 2, 3},
+            editable_columns={1, 2},
             units={
-                (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (2, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+                (1, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (2, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 3): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
             },
         ),
         "The best level ever",
@@ -45,7 +46,7 @@ levels = [
                 "FGGWWWGGF",
 
             ],
-            editable_columns={1, 2, 3},
+            editable_columns={1, 2},
             units={
                 (1, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
                 (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
