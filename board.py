@@ -91,6 +91,7 @@ class Board:
                 for tile in row
             ]
             for row in self.tiles
+
         ]
 
         # Then, place units in their new positions, detecting collisions where they exist
@@ -100,34 +101,47 @@ class Board:
         for chain in chains:
             for row_idx, col_idx in chain:
                 self.move_unit(new_tiles, row_idx, col_idx)
-                if new_tiles[row_idx][col_idx].type != TileType.TRAMPOLINE:
-                    self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
-                else:
-                    self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
+                if self.get_faced_tile(row_idx, col_idx)[0].type != TileType.TRAPDOOR:
+                    if new_tiles[row_idx][col_idx].type != TileType.TRAMPOLINE:
+                        print("Animate 1")
+                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                    else:
+                        print("Animate 2")
+                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
         for row_idx, col_idx in locked_units:
             if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
                 new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
-                self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                if self.tiles[row_idx][col_idx].type != TileType.TRAPDOOR:
+                    print("Animate 3")
+                    self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
             else:
                 unit = self.tiles[row_idx][col_idx].unit
                 self.finished_units_by_team[unit.team] += 1
                 # Unit Win!! animation goes here
+                print("Animate 4")
                 self.animations.append(UnitWinAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
 
         for unit, row_idx, col_idx in victims:
+            print("Animate 5")
             self.animations.append(UnitDeathAnimation(frame, unit, col_to_x(col_idx), row_to_y(row_idx)))
 
         #logic for all relevant items
         for row_idx, row in enumerate(new_tiles):
             for col_idx, tile in enumerate(row):
                 if tile.unit is not None:
+                    #Trampolines
                     tile.trampoline_bounce_calculator()
-                    faced_tile, faced_row, faced_col = self.get_new_faced_tile(new_tiles, row_idx, col_idx)
-                    if faced_tile is not None and faced_tile.type == TileType.WALL:
-                        if faced_tile.health > tile.unit.type.value:
-                            faced_tile.health -= tile.unit.type.value
-                        else:
-                            new_tiles[faced_row][faced_col] = Tile(TileType.DEADWALL, None, faced_tile.is_placeable)
+                    if self.tiles[row_idx][col_idx].type == TileType.TRAPDOOR:
+                        self.animations.append(UnitDeathAnimation(frame, tile.unit, col_to_x(col_idx), row_to_y(row_idx)))
+                        new_tiles[row_idx][col_idx].unit = None
+                    else:
+                        #Walls
+                        faced_tile, faced_row, faced_col = self.get_new_faced_tile(new_tiles, row_idx, col_idx)
+                        if faced_tile is not None and faced_tile.type == TileType.WALL:
+                            if faced_tile.health > tile.unit.type.value:
+                                faced_tile.health -= tile.unit.type.value
+                            else:
+                                new_tiles[faced_row][faced_col] = Tile(TileType.DEADWALL, None, faced_tile.is_placeable)
         change = self.tiles != new_tiles
         self.tiles = new_tiles
 

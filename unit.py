@@ -119,6 +119,7 @@ class TileType(Enum):
     WALL = TileTypeData(False, WATER_IMAGE, "L")
     DEADWALL = TileTypeData(True, GRASS_IMAGE, "D")
     TRAMPOLINE = TileTypeData(True, pygame.transform.rotate(GRASS_IMAGE,45), "T")
+    TRAPDOOR = TileTypeData(True, GRASS_IMAGE, "R")
     FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
 
     @classmethod

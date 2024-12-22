@@ -206,6 +206,12 @@ def main():
                             if tile.type == TileType.GRASS:
                                 tile.type = TileType.WATER
                             elif tile.type == TileType.WATER:
+                                tile.type = TileType.WALL
+                            elif tile.type == TileType.WALL:
+                                tile.type = TileType.TRAPDOOR
+                            elif tile.type == TileType.TRAPDOOR:
+                                tile.type = TileType.FINISH_LINE
+                            else:
                                 tile.type = TileType.GRASS
                         elif mode == 3:
                             if tile.unit is not None:
