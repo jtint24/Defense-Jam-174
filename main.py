@@ -1,12 +1,12 @@
 import pygame
-from pygame import MOUSEBUTTONDOWN
+from pygame import MOUSEBUTTONDOWN, Surface
 
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from dialogue import opening_dialogue
 from gamestate import GameState
 from level import levels
-from tile_images import PLAY_IMAGE
+from tile_images import PLAY_IMAGE, ORANGE_BG
 from ui import ImageButton, TextButton
 from unit import TileType
 
@@ -26,7 +26,6 @@ def main():
     next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
     mode = 1
 
-    current_game_state = GameState.EDIT_TROOPS
     frame_count = 0
     running = True
 
@@ -45,7 +44,9 @@ def main():
 
     while running:
         frame_count += 1
-        screen.fill((255, 255, 255))
+
+        render_checkerboard_background(screen, frame_count)
+
 
         if current_game_state == GameState.RESULTS_SCREEN:
             bonus_troops = levels[level_idx].bonus_troops
@@ -89,7 +90,10 @@ def main():
             overlay.fill((0, 0, 0, 100))
             screen.blit(overlay, (0, 0))
 
-            current_dialogue.render(screen, big_font, frame_count)
+            if current_dialogue is None:
+                current_game_state = GameState.EDIT_TROOPS
+            else:
+                current_dialogue.render(screen, big_font, frame_count)
 
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
@@ -118,9 +122,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_l:
-                    print("yippie")
-                elif event.key == pygame.K_1:
+                if event.key == pygame.K_1:
                     mode = 1
                 elif event.key == pygame.K_2:
                     mode = 2
@@ -234,5 +236,27 @@ def main():
     pygame.quit()
 
 
+def render_checkerboard_background(screen: Surface, frame_count: int):
+    screen.fill((201, 221, 255))
+
+    tile_image = ORANGE_BG
+
+    # Get the screen dimensions and the tile size
+    screen_width, screen_height = screen.get_size()
+    tile_width, tile_height = tile_image.get_size()
+    anim_length = 4*32*2
+    for y in range(-screen_height//2, screen_height, tile_height):
+        for x in range(-screen_width//2, screen_width, tile_width):
+            if ((x // tile_width) % 4 == 0 and y // tile_width % 4 == 0) or ((x // tile_width) % 4 == 2 and y // tile_width % 4 == 2):
+                screen.blit(tile_image, (x+(frame_count % anim_length)/2, y+(frame_count % anim_length)/2))
+
+
 if __name__ == "__main__":
     main()
+
+
+
+# X   X
+#  . .
+#   X
+#

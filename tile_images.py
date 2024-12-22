@@ -39,5 +39,7 @@ GENERAL_IMAGE = load_sprite_image("general")
 
 PLAY_IMAGE = load_button_image("play_button")
 
+ORANGE_BG = load_sprite_image("orange_bg")
+
 DEFENSE_OVERLAY = load_overlay_image("defense")
 OFFENSE_OVERLAY = load_overlay_image("offense")
