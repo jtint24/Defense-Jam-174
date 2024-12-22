@@ -156,9 +156,18 @@ def main():
                     mode = 3
                 elif event.key == pygame.K_4:
                     mode = 4
+                elif event.key == pygame.K_5:
+                    mode = 5
+                elif event.key == pygame.K_6:
+                    mode = 6
                 elif event.key == pygame.K_b:
                     if backup_board is not None:
                         board = backup_board
+                        current_game_state = GameState.EDIT_LEVEL
+                elif event.key == pygame.K_MINUS:
+                    max_units -= 1
+                elif event.key == pygame.K_EQUALS:
+                    max_units += 1
                 elif event.key == pygame.K_TAB:
                     if current_game_state == GameState.DIALOGUE:
                         current_dialogue = current_dialogue.next
@@ -218,7 +227,10 @@ def main():
                                 tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
-
+                elif current_game_state == GameState.EDIT_LEVEL:
+                    if play_button.check_click(pos):
+                        frame_count+=10
+                        board.update(frame_count)
 
                     board.animations = []
   
@@ -251,24 +263,25 @@ def main():
                             elif tile.unit.team is Team.APPLE:
                                 tile.unit = None
                         elif mode == 2:
-                            if tile.type == TileType.GRASS:
-                                tile.type = TileType.WATER
-                            elif tile.type == TileType.WATER:
-                                tile.type = TileType.WALL
-                            elif tile.type == TileType.WALL:
+                            if tile.type == TileType.WALL:
                                 tile.type = TileType.TRAMPOLINE
                             elif tile.type == TileType.TRAMPOLINE:
                                 tile.type = TileType.TRAPDOOR
                             elif tile.type == TileType.TRAPDOOR:
                                 tile.type = TileType.FINISH_LINE
                             else:
-                                tile.type = TileType.GRASS
+                                tile.type = TileType.WALL
                         elif mode == 3:
                             if tile.unit is not None:
                                 tile.unit.rotate_cw()
                         elif mode == 4:
                             if tile.type == TileType.TRAMPOLINE:
                                 tile.rotate_cw()
+                        elif mode == 5:
+                            if tile.type == TileType.GRASS:
+                                tile.type = TileType.WATER
+                            else:
+                                tile.type = TileType.GRASS
 
                     board.animations = []
                     board.update_strength_defense(frame_count)

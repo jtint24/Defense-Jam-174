@@ -18,11 +18,17 @@ levels = [
         Board.from_string(
             [
 
-                "FGGWWWGGF",
-                "FGGGGGGGF",
-                "FGGGGGTGF",
-                "FGGGGGGGF",
-                "FGGWWWGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+
 
             ],
             editable_columns={1, 2},
