@@ -270,7 +270,7 @@ def main():
                             if tile.type == TileType.TRAMPOLINE:
                                 tile.rotate_cw()
 
-
+                    board.animations = []
                     board.update_strength_defense(frame_count)
 
                     # Check if play button was clicked
