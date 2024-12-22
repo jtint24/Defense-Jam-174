@@ -35,18 +35,20 @@ def main():
     frame_count = 0
     running = True
 
-    level_idx = 0
+    level_idx = 3
 
     board = levels[level_idx].board
+    level_name = levels[level_idx].name
 
-    max_units = 2
+    max_units = 7
     bonus_troops = 0  # Bonus for clearing the level
     troops_killed = 0
     next_round_troops = -1
 
-    current_dialogue = opening_dialogue
+    current_dialogue = levels[level_idx].opening_dialogue
 
     current_game_state = GameState.TITLE_SCREEN
+
 
     while running:
         frame_count += 1
@@ -108,6 +110,12 @@ def main():
         else:
             # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
             board.render(screen, current_game_state, frame_count)
+
+
+            level_name_surface = big_font.render(level_name, True, (0, 0, 0))
+            l_name_rect = level_name_surface.get_rect(topleft=((SCREEN_WIDTH - 14 * len(level_name)) // 2, (SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2 - 60))
+            pygame.draw.rect(screen, (255, 255, 255), l_name_rect.inflate(20, 10))
+            screen.blit(level_name_surface, l_name_rect)
 
             play_button.draw(screen)
 
@@ -202,6 +210,7 @@ def main():
                     if next_round_troops > 0 and next_button.check_click(pos):
                         level_idx += 1
                         board = levels[level_idx].board
+                        level_name = levels[level_idx].name
                         max_units = next_round_troops
                         current_dialogue = levels[level_idx].opening_dialogue
                         if current_dialogue is None:

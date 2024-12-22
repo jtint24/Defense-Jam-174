@@ -3,7 +3,7 @@ import math
 import pygame
 
 from gamestate import GameState
-from unit import Unit, Direction
+from unit import Unit, Direction, Team, UnitType
 from constants import TILE_SIZE
 
 class Animation:
@@ -19,6 +19,8 @@ class UnitAnimation(Animation):
         self.start_frame = start_frame
         self.x = x
         self.y = y
+        if unit is None:
+            unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE) # THIS SHOULD NOT HAPPEN!
         self.unit = unit
         if direction is not None:
             self.direction = direction

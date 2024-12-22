@@ -46,6 +46,7 @@ APPLE_TANK_IMAGE = load_sprite_image("apple_tank")
 
 
 GENERAL_IMAGE = load_sprite_image("general")
+GENERAL_APPLE_IMAGE = load_sprite_image("apple_general")
 
 PLAY_IMAGE = load_button_image("play_button")
 
