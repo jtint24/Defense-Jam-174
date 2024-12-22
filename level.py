@@ -29,7 +29,9 @@ levels = [
             units={
                 (1, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
                 (2, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 3): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
+                (3, 3): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
             },
         ),
         "The best level ever",
