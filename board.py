@@ -49,6 +49,10 @@ class Board:
         offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
         offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
 
+        rect = pygame.Rect(offset_x - 8, offset_y - 8, TILE_SIZE * len(self.tiles[0]) + 16, TILE_SIZE* len(self.tiles) + 16)
+        pygame.draw.rect(screen, (0,0,0), rect, width=8)
+
+
         for row_idx, row in enumerate(self.tiles):
             for col_idx, tile in enumerate(row):
                 # Calculate the screen position of the tile
@@ -155,13 +159,13 @@ class Board:
                     unit_line.append(tile.unit)
                 else:
                     for unit in unit_line:
-                        unit.type = UnitType(min(3, len(unit_line)))
+                        unit.type = UnitType(min(4, len(unit_line)))
                     if tile.unit is None:
                         unit_line = []
                     else:
                         unit_line = [tile.unit]
             for unit in unit_line:
-                unit.type = UnitType(min(3, len(unit_line)))
+                unit.type = UnitType(min(4, len(unit_line)))
 
         # ... And we update each troop's defense
 
