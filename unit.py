@@ -5,7 +5,7 @@ import pygame
 from pygame import Surface
 
 from tile_images import FINISH_LINE_IMAGE, WATER_IMAGE, GRASS_IMAGE, ORANGE_IMAGE, ORANGE_TROOP_IMAGE, \
-    ORANGE_TANK_IMAGE, APPLE_IMAGE, TRAMPOLINE_SLASH
+    ORANGE_TANK_IMAGE, APPLE_IMAGE, TRAMPOLINE_SLASH, GRAVESTONE_IMAGE, BROKEN_GRAVESTONE_IMAGE, LAVA_IMAGE
 
 
 class Direction(Enum):
@@ -117,9 +117,9 @@ class TileType(Enum):
     GRASS = TileTypeData(True, GRASS_IMAGE, "G")
     WATER = TileTypeData(False, WATER_IMAGE, "W")
     TRAMPOLINE = TileTypeData(True, TRAMPOLINE_SLASH, "T")
-    WALL = TileTypeData(False, WATER_IMAGE, "L")
-    DEADWALL = TileTypeData(True, GRASS_IMAGE, "D")
-    TRAPDOOR = TileTypeData(True, GRASS_IMAGE, "R")
+    WALL = TileTypeData(False, GRAVESTONE_IMAGE, "L")
+    DEADWALL = TileTypeData(True, BROKEN_GRAVESTONE_IMAGE, "D")
+    TRAPDOOR = TileTypeData(True, LAVA_IMAGE, "R")
     FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
 
     @classmethod
