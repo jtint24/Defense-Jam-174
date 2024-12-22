@@ -17,7 +17,7 @@ pygame.init()
 
 # Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tile Board")
+pygame.display.set_caption("Warchard")
 backup_board: Optional[Board] = None
 
 
@@ -35,7 +35,7 @@ def main():
     frame_count = 0
     running = True
 
-    level_idx = 3
+    level_idx = 7
 
     board = levels[level_idx].board
     level_name = levels[level_idx].name
@@ -322,7 +322,7 @@ def render_checkerboard_background(screen: Surface, frame_count: int):
 def render_title_screen(screen: Surface, title_font: Font, start_button: TextButton):
 
     # Draw the title
-    title_surface = title_font.render("My Game Title", True, (0, 0, 0))
+    title_surface = title_font.render("Warchard", True, (0, 0, 0))
     title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
     screen.blit(title_surface, title_rect)
 
