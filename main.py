@@ -1,5 +1,6 @@
 import pygame
 from pygame import MOUSEBUTTONDOWN, Surface
+from pygame.font import Font
 
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
@@ -24,6 +25,8 @@ def main():
 
     play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
     next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
+    start_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, "Start Game", big_font)
+
     mode = 1
 
     frame_count = 0
@@ -40,7 +43,7 @@ def main():
 
     current_dialogue = opening_dialogue
 
-    current_game_state = GameState.DIALOGUE
+    current_game_state = GameState.TITLE_SCREEN
 
     while running:
         frame_count += 1
@@ -48,7 +51,9 @@ def main():
         render_checkerboard_background(screen, frame_count)
 
 
-        if current_game_state == GameState.RESULTS_SCREEN:
+        if current_game_state == GameState.TITLE_SCREEN:
+            render_title_screen(screen, title_font, start_button)
+        elif current_game_state == GameState.RESULTS_SCREEN:
             bonus_troops = levels[level_idx].bonus_troops
             success = board.finished_units_by_team[Team.ORANGE] > board.finished_units_by_team[Team.APPLE]
 
@@ -117,17 +122,17 @@ def main():
             )
 
             # Calculate Y-position for team counters
-            team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2
+            team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2 + 20
 
             # Apple team's finished units
             if current_game_state == GameState.PLAY_TROOPS:
-                apple_rect = apple_finished_surface.get_rect(topleft=(20, team_counters_y))
+                apple_rect = apple_finished_surface.get_rect(topleft=((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y))
                 pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
                 screen.blit(apple_finished_surface, apple_rect)
 
                 # Orange team's finished units
                 orange_rect = orange_finished_surface.get_rect(
-                    topleft=(SCREEN_WIDTH - TILE_SIZE + 10, team_counters_y)
+                    topleft=((SCREEN_WIDTH + len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y)
                 )
                 pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
                 screen.blit(orange_finished_surface, orange_rect)
@@ -159,7 +164,10 @@ def main():
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 print("Click Registered")
-                if current_game_state == GameState.DIALOGUE:
+                if current_game_state == GameState.TITLE_SCREEN:
+                    if start_button.check_click(pos):
+                        current_game_state = GameState.DIALOGUE
+                elif current_game_state == GameState.DIALOGUE:
                     if current_dialogue.is_complete(frame_count):
                         current_dialogue = current_dialogue.next
                     else:
@@ -267,12 +275,18 @@ def render_checkerboard_background(screen: Surface, frame_count: int):
                 screen.blit(tile_image, (x+(frame_count % anim_length)/2, y+(frame_count % anim_length)/2))
 
 
+def render_title_screen(screen: Surface, title_font: Font, start_button: TextButton):
+
+    # Draw the title
+    title_surface = title_font.render("My Game Title", True, (0, 0, 0))
+    title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
+    screen.blit(title_surface, title_rect)
+
+    # Draw the start button
+    start_button.draw(screen)
+
+
 if __name__ == "__main__":
     main()
 
 
-
-# X   X
-#  . .
-#   X
-#
