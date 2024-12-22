@@ -35,17 +35,17 @@ def main():
     frame_count = 0
     running = True
 
-    level_idx = 0
+    level_idx = 3
 
     board = levels[level_idx].board
     level_name = levels[level_idx].name
 
-    max_units = 2
+    max_units = 7
     bonus_troops = 0  # Bonus for clearing the level
     troops_killed = 0
     next_round_troops = -1
 
-    current_dialogue = opening_dialogue
+    current_dialogue = levels[level_idx].opening_dialogue
 
     current_game_state = GameState.TITLE_SCREEN
 
