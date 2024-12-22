@@ -19,7 +19,7 @@ levels = [
             [
                 "FGGWWWGGF",
                 "FGGGGGGGF",
-                "FGGGGGGGF",
+                "FGGGGGTGF",
                 "FGGGGGGGF",
                 "FGGWWWGGF",
 
@@ -53,6 +53,7 @@ levels = [
             }
         ),
         "The best level ever",
+         Dialogue.from_list([("Good show, jolly good show!", None, None)]),
         bonus_troops=3
     ),
     Level(

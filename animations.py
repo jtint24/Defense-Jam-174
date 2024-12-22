@@ -14,11 +14,15 @@ class Animation:
 
 
 class UnitAnimation:
-    def __init__(self, start_frame: int, unit: Unit, x: int, y: int):
+    def __init__(self, start_frame: int, unit: Unit, x: int, y: int, direction:Direction =None):
         self.start_frame = start_frame
         self.x = x
         self.y = y
         self.unit = unit
+        if direction is not None:
+            self.direction = direction
+        else:
+            self.direction = unit.direction
 
 
 class StaticUnitAnimation(UnitAnimation):
@@ -33,7 +37,7 @@ class UnitMovementAnimation(UnitAnimation):
             Direction.RIGHT: (1, 0),
             Direction.UP: (0, -1),
             Direction.DOWN: (0, 1),
-        }[self.unit.direction]
+        }[self.direction]
 
         animation_frame = current_frame - self.start_frame
 

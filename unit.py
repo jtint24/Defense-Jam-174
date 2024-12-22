@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Self, Optional, NamedTuple
 
 import pygame
+from pygame import Surface
 
 from tile_images import FINISH_LINE_IMAGE, WATER_IMAGE, GRASS_IMAGE, ORANGE_IMAGE, ORANGE_TROOP_IMAGE, \
     ORANGE_TANK_IMAGE, APPLE_IMAGE
@@ -42,8 +43,57 @@ class Unit:
         self.team = team
         self.defense = 1
 
+    def rotate_cw(self):
+        match self.direction:
+            case Direction.UP:
+                self.direction = Direction.RIGHT
+            case Direction.RIGHT:
+                self.direction = Direction.DOWN
+            case Direction.DOWN:
+                self.direction = Direction.LEFT
+            case _:
+                self.direction = Direction.UP
+
+    def rotate_ccw(self):
+        match self.direction:
+            case Direction.UP:
+                self.direction = Direction.LEFT
+            case Direction.RIGHT:
+                self.direction = Direction.UP
+            case Direction.DOWN:
+                self.direction = Direction.RIGHT
+            case _:
+                self.direction = Direction.DOWN
+
     def get_image(self):
-        return get_image_by_team(self.team)[self.type.value - 1]
+        image_list = get_image_by_team(self.team)
+        try:
+             retval = image_list[self.type.value - 1]
+        except IndexError:
+            print("Uh Oh!! Time for moe ASSETTS")
+            print(image_list)
+            print(self.type)
+            retval = APPLE_IMAGE
+        if self.team == Team.APPLE:
+            match self.direction:
+                case Direction.RIGHT:
+                    return pygame.transform.flip(retval, True, False)
+                case Direction.UP:
+                    return pygame.transform.rotate(retval,270)
+                case Direction.DOWN:
+                    return pygame.transform.rotate(retval,90)
+                case _:
+                    return retval
+        elif self.team == Team.ORANGE:
+            match self.direction:
+                case Direction.LEFT:
+                    return pygame.transform.flip(retval, True, False)
+                case Direction.UP:
+                    return pygame.transform.rotate(retval, 90)
+                case Direction.DOWN:
+                    return pygame.transform.rotate(retval, 270)
+                case _:
+                    return retval
 
     def __eq__(self, other: Self):
         return other is not None and (
@@ -65,6 +115,7 @@ class TileTypeData(NamedTuple):
 class TileType(Enum):
     GRASS = TileTypeData(True, GRASS_IMAGE, "G")
     WATER = TileTypeData(False, WATER_IMAGE, "W")
+    TRAMPOLINE = TileTypeData(True, pygame.transform.rotate(GRASS_IMAGE,45), "T")
     FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
 
     @classmethod
@@ -73,17 +124,67 @@ class TileType(Enum):
             if tile_type.value.char_code == name:
                 return tile_type
 
-
+class ExtraData(NamedTuple):
+    rotation: Direction
+    destination: tuple[int]
 class Tile:
-    def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True):
+    def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, extra_data: ExtraData=None):
         self.type = type
         self.unit = unit
         self.is_placeable = is_placeable
+        if extra_data != None:
+            self.extra_data = extra_data
+        else:
+            self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
 
     def is_free(self) -> bool:
         "Returns whether the tile is clear to walk on, based on tile type and other units on it"
         return self.type.value.is_passable and self.unit is None
 
+    def render(self, screen: Surface, tile_x, tile_y):
+        match self.type:
+            case TileType.TRAMPOLINE:
+                if self.extra_data.rotation == Direction.RIGHT or self.extra_data.rotation == Direction.LEFT:
+                    screen.blit(self.type.value.image, (tile_x, tile_y))
+                else:
+                    screen.blit(pygame.transform.rotate(self.type.value.image, 90), (tile_x,tile_y))
+            case _:
+                screen.blit(self.type.value.image, (tile_x, tile_y))
+
+    def rotate_cw(self):
+        match self.extra_data.rotation:
+            case Direction.UP:
+                self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
+            case Direction.RIGHT:
+                self.extra_data = ExtraData(Direction.DOWN, [0, 0])
+            case Direction.DOWN:
+                self.extra_data = ExtraData(Direction.LEFT, [0, 0])
+            case _:
+                self.extra_data = ExtraData(Direction.UP, [0, 0])
+
+    def rotate_ccw(self):
+        match self.extra_data.rotation:
+            case Direction.UP:
+                self.extra_data = ExtraData(Direction.LEFT, [0, 0])
+            case Direction.RIGHT:
+                self.extra_data = ExtraData(Direction.UP, [0, 0])
+            case Direction.DOWN:
+                self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
+            case _:
+                self.direction = ExtraData(Direction.DOWN, [0, 0])
+
+    def get_reflection(self):
+        if self.unit is not None and self.type == TileType.TRAMPOLINE:
+            if self.extra_data.rotation == Direction.RIGHT or self.extra_data.rotation == Direction.LEFT:
+                if self.unit.direction == Direction.RIGHT or self.unit.direction == Direction.LEFT:
+                    self.unit.rotate_ccw()
+                else:
+                    self.unit.rotate_cw()
+            else:
+                if self.unit.direction == Direction.RIGHT or self.unit.direction == Direction.LEFT:
+                    self.unit.rotate_cw()
+                else:
+                    self.unit.rotate_ccw()
     def __eq__(self, other: Self):
         return other is not None and (
             self.type == other.type and

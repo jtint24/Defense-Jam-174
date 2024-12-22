@@ -1,7 +1,3 @@
-from enum import Enum
-from time import time
-from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
-
 import pygame
 from pygame import MOUSEBUTTONDOWN
 
@@ -12,6 +8,7 @@ from gamestate import GameState
 from level import levels
 from tile_images import PLAY_IMAGE
 from ui import ImageButton, TextButton
+from unit import TileType
 
 pygame.init()
 
@@ -27,6 +24,7 @@ def main():
 
     play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
     next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
+    mode = 1
 
     current_game_state = GameState.EDIT_TROOPS
     frame_count = 0
@@ -119,10 +117,30 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_l:
+                    print("yippie")
+                elif event.key == pygame.K_1:
+                    mode = 1
+                elif event.key == pygame.K_2:
+                    mode = 2
+                elif event.key == pygame.K_3:
+                    mode = 3
+                elif event.key == pygame.K_4:
+                    mode = 4
+                elif event.key == pygame.K_TAB:
+                    if current_game_state == GameState.DIALOGUE:
+                        current_dialogue = current_dialogue.next
+                elif event.key == pygame.K_ESCAPE:
+                    if current_game_state == GameState.DIALOGUE:
+                        current_game_state = GameState.EDIT_TROOPS
+                    elif current_game_state == GameState.EDIT_TROOPS:
+                        current_game_state = GameState.EDIT_LEVEL
+                    elif current_game_state == GameState.EDIT_LEVEL:
+                        current_game_state = GameState.EDIT_TROOPS
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
-
+                print("Click Registered")
                 if current_game_state == GameState.DIALOGUE:
                     if current_dialogue.is_complete(frame_count):
                         current_dialogue = current_dialogue.next
@@ -161,6 +179,47 @@ def main():
                     # Check if play button was clicked
                     if play_button.check_click(pos):
                         current_game_state = GameState.PLAY_TROOPS
+
+                elif current_game_state == GameState.EDIT_LEVEL:
+                    # Calculate row and column from click position
+                    print("Edit mode")
+                    col = (pos[0] - ((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
+                    row = (pos[1] - ((SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
+
+                    # Ensure click is within bounds
+                    print("Click Pos: " + str(col) + ", " + str(row))
+                    if 0 <= row < len(board.tiles) and 0 <= col < len(board.tiles[0]):
+                        tile = board.tiles[row][col]
+                        print("in bounds")
+
+                        # Add or remove units based on current state
+                        if mode == 1:
+                            if tile.unit is None:
+                                if  tile.is_free() and not tile.is_placeable:
+                                    print("Adding Unit")
+                                    tile.unit = Unit(UnitType.SOLDIER, Direction.UP, Team.APPLE)
+                            elif tile.unit.team is Team.ORANGE:
+                                tile.unit = None
+                            elif tile.unit.team is Team.APPLE:
+                                tile.unit = None
+                        elif mode == 2:
+                            if tile.type == TileType.GRASS:
+                                tile.type = TileType.WATER
+                            elif tile.type == TileType.WATER:
+                                tile.type = TileType.GRASS
+                        elif mode == 3:
+                            if tile.unit is not None:
+                                tile.unit.rotate_cw()
+                        elif mode == 4:
+                            if tile.type == TileType.TRAMPOLINE:
+                                tile.rotate_cw()
+
+
+
+                    board.update_strenth_defense(frame_count)
+
+                    # Check if play button was clicked
+
 
         pygame.time.delay(20)
 

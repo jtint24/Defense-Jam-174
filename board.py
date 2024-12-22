@@ -56,7 +56,7 @@ class Board:
                 tile_y = offset_y + row_idx * TILE_SIZE
 
                 # Render the tile image
-                screen.blit(tile.type.value.image, (tile_x, tile_y))
+                tile.render(screen, tile_x, tile_y)
 
                 # Render the unit if present (AND it's edit mode cuz if so, no animations)
                 # len(animations) == 0 is a total hack, to patch the first frame of play mode where animations haven't been populated yet
@@ -100,7 +100,10 @@ class Board:
         for chain in chains:
             for row_idx, col_idx in chain:
                 self.move_unit(new_tiles, row_idx, col_idx)
-                self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                if new_tiles[row_idx][col_idx].type != TileType.TRAMPOLINE:
+                    self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                else:
+                    self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
         for row_idx, col_idx in locked_units:
             if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
                 new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
@@ -114,6 +117,10 @@ class Board:
         for unit, row_idx, col_idx in victims:
             self.animations.append(UnitDeathAnimation(frame, unit, col_to_x(col_idx), row_to_y(row_idx)))
 
+        for row_idx, row in enumerate(self.tiles):
+            unit_line = []
+            for col_idx, tile in enumerate(row):
+                new_tiles[row_idx][col_idx].get_reflection()
         change = self.tiles != new_tiles
         self.tiles = new_tiles
 
