@@ -193,7 +193,7 @@ class Board:
             for unit in unit_line:
                 unit.defense = min(5, len(unit_line))
             if len(unit_line) > 1:
-                self.animations.append(FlankAnimation(self.row_to_y(start_row_idx), self.row_to_y(len(self.tiles)-1), self.col_to_x(col_idx)))
+                self.animations.append(FlankAnimation(frame, self.row_to_y(start_row_idx), self.row_to_y(len(self.tiles)-1), self.col_to_x(col_idx)))
 
     def resolve_conflict(self, conflict: "Conflict") -> Set[Tuple[int, int]]:
         team_damage = {team: 0 for team in Team}

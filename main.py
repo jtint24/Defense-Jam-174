@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pygame
 from pygame import MOUSEBUTTONDOWN, Surface
 from pygame.font import Font
@@ -16,6 +18,7 @@ pygame.init()
 # Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tile Board")
+backup_board: Optional[Board] = None
 
 
 def main():
@@ -153,6 +156,9 @@ def main():
                     mode = 3
                 elif event.key == pygame.K_4:
                     mode = 4
+                elif event.key == pygame.K_B:
+                    if backup_board is not None:
+                        board = backup_board
                 elif event.key == pygame.K_TAB:
                     if current_game_state == GameState.DIALOGUE:
                         current_dialogue = current_dialogue.next
@@ -162,6 +168,7 @@ def main():
                     elif current_game_state == GameState.EDIT_TROOPS:
                         current_game_state = GameState.EDIT_LEVEL
                     elif current_game_state == GameState.EDIT_LEVEL:
+                        backup_board = board
                         current_game_state = GameState.EDIT_TROOPS
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
@@ -236,7 +243,7 @@ def main():
                             if tile.unit is None:
                                 if tile.is_free() and not tile.is_placeable:
                                     print("Adding Unit")
-                                    tile.unit = Unit(UnitType.SOLDIER, Direction.UP, Team.APPLE)
+                                    tile.unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
                             elif tile.unit.team is Team.ORANGE:
                                 tile.unit = None
                             elif tile.unit.team is Team.APPLE:
@@ -247,6 +254,8 @@ def main():
                             elif tile.type == TileType.WATER:
                                 tile.type = TileType.WALL
                             elif tile.type == TileType.WALL:
+                                tile.type = TileType.TRAMPOLINE
+                            elif tile.type == TileType.TRAMPOLINE:
                                 tile.type = TileType.TRAPDOOR
                             elif tile.type == TileType.TRAPDOOR:
                                 tile.type = TileType.FINISH_LINE
