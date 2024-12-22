@@ -174,7 +174,7 @@ def main():
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
 
-                    board.update_strenth_defense(frame_count)
+                    board.update_strength_defense(frame_count)
 
                     # Check if play button was clicked
                     if play_button.check_click(pos):
@@ -216,7 +216,7 @@ def main():
 
 
 
-                    board.update_strenth_defense(frame_count)
+                    board.update_strength_defense(frame_count)
 
                     # Check if play button was clicked
 
