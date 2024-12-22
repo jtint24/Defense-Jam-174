@@ -28,6 +28,8 @@ def load_overlay_image(name: str) -> pygame.Surface:
 
 GRASS_IMAGE = load_tile_image("grass")
 WATER_IMAGE = load_tile_image("water")
+TRAMPOLINE_BACKSLASH = load_tile_image("trampoline_backslash")
+TRAMPOLINE_SLASH = load_tile_image("trampoline_slash")
 FINISH_LINE_IMAGE = load_tile_image("finish_line")
 
 ORANGE_IMAGE = load_sprite_image("orange")

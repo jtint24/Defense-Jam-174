@@ -5,7 +5,7 @@ import pygame
 from pygame import Surface
 
 from tile_images import FINISH_LINE_IMAGE, WATER_IMAGE, GRASS_IMAGE, ORANGE_IMAGE, ORANGE_TROOP_IMAGE, \
-    ORANGE_TANK_IMAGE, APPLE_IMAGE
+    ORANGE_TANK_IMAGE, APPLE_IMAGE, TRAMPOLINE_SLASH
 
 
 class Direction(Enum):
@@ -115,7 +115,7 @@ class TileTypeData(NamedTuple):
 class TileType(Enum):
     GRASS = TileTypeData(True, GRASS_IMAGE, "G")
     WATER = TileTypeData(False, WATER_IMAGE, "W")
-    TRAMPOLINE = TileTypeData(True, pygame.transform.rotate(GRASS_IMAGE,45), "T")
+    TRAMPOLINE = TileTypeData(True, TRAMPOLINE_SLASH, "T")
     FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
 
     @classmethod
@@ -127,12 +127,13 @@ class TileType(Enum):
 class ExtraData(NamedTuple):
     rotation: Direction
     destination: tuple[int]
+
 class Tile:
     def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, extra_data: ExtraData=None):
         self.type = type
         self.unit = unit
         self.is_placeable = is_placeable
-        if extra_data != None:
+        if extra_data is not None:
             self.extra_data = extra_data
         else:
             self.extra_data = ExtraData(Direction.RIGHT, [0, 0])
@@ -147,7 +148,7 @@ class Tile:
                 if self.extra_data.rotation == Direction.RIGHT or self.extra_data.rotation == Direction.LEFT:
                     screen.blit(self.type.value.image, (tile_x, tile_y))
                 else:
-                    screen.blit(pygame.transform.rotate(self.type.value.image, 90), (tile_x,tile_y))
+                    screen.blit(pygame.transform.flip(self.type.value.image, True, False), (tile_x, tile_y))
             case _:
                 screen.blit(self.type.value.image, (tile_x, tile_y))
 
