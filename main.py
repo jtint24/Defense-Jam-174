@@ -156,7 +156,7 @@ def main():
                     mode = 3
                 elif event.key == pygame.K_4:
                     mode = 4
-                elif event.key == pygame.K_B:
+                elif event.key == pygame.K_b:
                     if backup_board is not None:
                         board = backup_board
                 elif event.key == pygame.K_TAB:
