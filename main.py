@@ -97,6 +97,8 @@ def main():
 
             if current_dialogue is None:
                 current_game_state = GameState.EDIT_TROOPS
+                board.animations = []
+                board.update_strength_defense(frame_count)
             else:
                 current_dialogue.render(screen, big_font, frame_count)
 
@@ -174,6 +176,9 @@ def main():
                         current_dialogue.first_appear_frame = -10000
                     if current_dialogue is None:
                         current_game_state = GameState.EDIT_TROOPS
+                        board.animations = []
+                        board.update_strength_defense(frame_count)
+
 
                 elif current_game_state == GameState.RESULTS_SCREEN:
                     if next_round_troops > 0 and next_button.check_click(pos):
@@ -183,6 +188,9 @@ def main():
                         current_dialogue = levels[level_idx].opening_dialogue
                         if current_dialogue is None:
                             current_game_state = GameState.EDIT_TROOPS
+                            board.animations = []
+                            board.update_strength_defense(frame_count)
+
                         else:
                             current_game_state = GameState.DIALOGUE
 
@@ -202,7 +210,8 @@ def main():
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
 
-                    board.update_strenth_defense(frame_count)
+                    board.animations = []
+                    board.update_strength_defense(frame_count)
 
                     # Check if play button was clicked
                     if play_button.check_click(pos):
@@ -242,7 +251,7 @@ def main():
                             if tile.type == TileType.TRAMPOLINE:
                                 tile.rotate_cw()
 
-                    board.update_strenth_defense(frame_count)
+                    board.update_strength_defense(frame_count)
 
                     # Check if play button was clicked
 
