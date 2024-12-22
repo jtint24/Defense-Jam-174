@@ -37,8 +37,13 @@ LAVA_IMAGE = load_tile_image("lava")
 
 ORANGE_IMAGE = load_sprite_image("orange")
 ORANGE_TROOP_IMAGE = load_sprite_image("orange_troop")
+ORANGE_SUPER_TROOP_IMAGE = load_sprite_image("orange_super_troop")
 ORANGE_TANK_IMAGE = load_sprite_image("orange_tank")
 APPLE_IMAGE = load_sprite_image("apple")
+APPLE_TROOP_IMAGE = load_sprite_image("apple_troop")
+APPLE_SUPER_TROOP_IMAGE = load_sprite_image("apple_super_troop")
+APPLE_TANK_IMAGE = load_sprite_image("apple_tank")
+
 
 GENERAL_IMAGE = load_sprite_image("general")
 

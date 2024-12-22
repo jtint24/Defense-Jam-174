@@ -165,6 +165,8 @@ def main():
                 elif event.key == pygame.K_ESCAPE:
                     if current_game_state == GameState.DIALOGUE:
                         current_game_state = GameState.EDIT_TROOPS
+                        board.animations = []
+                        board.update_strength_defense(frame_count)
                     elif current_game_state == GameState.EDIT_TROOPS:
                         current_game_state = GameState.EDIT_LEVEL
                     elif current_game_state == GameState.EDIT_LEVEL:

@@ -151,13 +151,15 @@ class Board:
         for row_idx, row in enumerate(self.tiles):
             unit_line = []
             for col_idx, tile in enumerate(row):
-
                 if tile.unit is not None and (len(unit_line) == 0 or tile.unit.team == unit_line[0].team):
                     unit_line.append(tile.unit)
                 else:
                     for unit in unit_line:
                         unit.type = UnitType(min(3, len(unit_line)))
-                    unit_line = []
+                    if tile.unit is None:
+                        unit_line = []
+                    else:
+                        unit_line = [tile.unit]
             for unit in unit_line:
                 unit.type = UnitType(min(3, len(unit_line)))
 
@@ -193,7 +195,7 @@ class Board:
             for unit in unit_line:
                 unit.defense = min(5, len(unit_line))
             if len(unit_line) > 1:
-                self.animations.append(FlankAnimation(frame, self.row_to_y(start_row_idx), self.row_to_y(len(self.tiles)-1), self.col_to_x(col_idx)))
+                self.animations.append(FlankAnimation(frame, self.row_to_y(start_row_idx), self.row_to_y(len(self.tiles)), self.col_to_x(col_idx)))
 
     def resolve_conflict(self, conflict: "Conflict") -> Set[Tuple[int, int]]:
         team_damage = {team: 0 for team in Team}
