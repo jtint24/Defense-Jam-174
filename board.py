@@ -108,26 +108,26 @@ class Board:
                 if self.get_faced_tile(row_idx, col_idx)[0].type != TileType.TRAPDOOR:
                     if new_tiles[row_idx][col_idx].type != TileType.TRAMPOLINE:
                         print("Animate 1")
-                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
                     else:
                         print("Animate 2")
-                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
+                        self.animations.append(UnitMovementAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx), self.tiles[row_idx][col_idx].unit.direction))
         for row_idx, col_idx in locked_units:
             if self.tiles[row_idx][col_idx].type != TileType.FINISH_LINE:
                 new_tiles[row_idx][col_idx].unit = self.tiles[row_idx][col_idx].unit
                 if self.tiles[row_idx][col_idx].type != TileType.TRAPDOOR:
                     print("Animate 3")
-                    self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                    self.animations.append(StaticUnitAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
             else:
                 unit = self.tiles[row_idx][col_idx].unit
                 self.finished_units_by_team[unit.team] += 1
                 # Unit Win!! animation goes here
                 print("Animate 4")
-                self.animations.append(UnitWinAnimation(frame, self.tiles[row_idx][col_idx].unit, col_to_x(col_idx), row_to_y(row_idx)))
+                self.animations.append(UnitWinAnimation(frame, self.tiles[row_idx][col_idx].unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
 
         for unit, row_idx, col_idx in victims:
             print("Animate 5")
-            self.animations.append(UnitDeathAnimation(frame, unit, col_to_x(col_idx), row_to_y(row_idx)))
+            self.animations.append(UnitDeathAnimation(frame, unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
 
         #logic for all relevant items
         for row_idx, row in enumerate(new_tiles):
@@ -136,7 +136,7 @@ class Board:
                     #Trampolines
                     tile.trampoline_bounce_calculator()
                     if self.tiles[row_idx][col_idx].type == TileType.TRAPDOOR:
-                        self.animations.append(UnitDeathAnimation(frame, tile.unit, col_to_x(col_idx), row_to_y(row_idx)))
+                        self.animations.append(UnitDeathAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
                         new_tiles[row_idx][col_idx].unit = None
                     else:
                         #Walls
