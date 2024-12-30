@@ -18,7 +18,7 @@ pygame.init()
 # Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Tile Board")
-backup_board: Optional[Board] = None
+
 
 
 def main():
@@ -31,6 +31,8 @@ def main():
     start_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, "Start Game", big_font)
 
     mode = 1
+
+    backup_board: Optional[Board] = None
 
     frame_count = 0
     running = True
@@ -236,7 +238,7 @@ def main():
                                 tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
                         elif tile.unit.team is Team.ORANGE:
                             tile.unit = None
-                elif current_game_state == GameState.EDIT_LEVEL:
+
                     if play_button.check_click(pos):
                         frame_count+=10
                         board.update(frame_count)
@@ -278,6 +280,8 @@ def main():
                                 tile.type = TileType.TRAPDOOR
                             elif tile.type == TileType.TRAPDOOR:
                                 tile.type = TileType.FINISH_LINE
+                            elif tile.type == TileType.FINISH_LINE:
+                                tile.type = TileType.TUNNEL
                             else:
                                 tile.type = TileType.WALL
                         elif mode == 3:

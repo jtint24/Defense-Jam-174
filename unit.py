@@ -122,6 +122,7 @@ class TileType(Enum):
     DEADWALL = TileTypeData(True, BROKEN_GRAVESTONE_IMAGE, "D")
     TRAPDOOR = TileTypeData(True, LAVA_IMAGE, "R")
     FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
+    TUNNEL = TileTypeData(True, GRAVESTONE_IMAGE, "N")
 
     @classmethod
     def from_str(cls, name: str):
@@ -131,7 +132,7 @@ class TileType(Enum):
 
 class Tile:
     def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, health:int = 5,
-                 rotation:Direction = Direction.RIGHT, destination:Tuple[int] = (0, 0)):
+                 rotation:Direction = Direction.RIGHT, destination:Tuple[int] = (5, 5)):
         self.type = type
         self.unit = unit
         self.is_placeable = is_placeable
@@ -165,7 +166,7 @@ class Tile:
                 self.rotation = Direction.UP
 
     def rotate_ccw(self):
-        match self.rotation.rotation:
+        match self.rotation:
             case Direction.UP:
                 self.rotation = Direction.LEFT
             case Direction.RIGHT:
@@ -175,7 +176,7 @@ class Tile:
             case _:
                 self.rotation = Direction.DOWN
 
-    def trampoline_bounce_calculator(self):
+    def trampoline_bounce(self):
         if self.unit is not None and self.type == TileType.TRAMPOLINE:
             if self.rotation == Direction.RIGHT or self.rotation == Direction.LEFT:
                 if self.unit.direction == Direction.RIGHT or self.unit.direction == Direction.LEFT:

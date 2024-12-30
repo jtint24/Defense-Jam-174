@@ -130,11 +130,17 @@ class Board:
             for col_idx, tile in enumerate(row):
                 if tile.unit is not None:
                     #Trampolines
-                    tile.trampoline_bounce_calculator()
+                    tile.trampoline_bounce()
                     if self.tiles[row_idx][col_idx].type == TileType.TRAPDOOR:
                         self.animations.append(UnitDeathAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
                         self.units_killed_by_team[new_tiles[row_idx][col_idx].unit.team] += 1
                         new_tiles[row_idx][col_idx].unit = None
+                    elif self.tiles[row_idx][col_idx].type == TileType.TUNNEL:
+                        dest = self.tiles[row_idx][col_idx].destination
+                        print(str(dest[0])  + ' ' + str(dest[1]))
+                        new_tiles[dest[0]][dest[1]].unit = tile.unit
+                        tile.unit = None
+                        self.animations.append(UnitWinAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
                     else:
                         #Walls
                         faced_tile, faced_row, faced_col = self.get_new_faced_tile(new_tiles, row_idx, col_idx)

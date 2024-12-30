@@ -13,7 +13,6 @@ class Level:
     opening_dialogue: Optional[Dialogue]
     bonus_troops: int
 
-
 levels = [
     Level(
         Board.from_string(
@@ -119,6 +118,65 @@ levels = [
             ("But what's this? It seems there are some plinths on this battlefield?", GENERAL_IMAGE, None),
             ("Our troops could break them down, but it might take them a while... A stronger unit would get it down faster!", GENERAL_IMAGE, None),
         ]),
+        bonus_troops=2
+    ),
+        Level(
+        Board.from_string(
+            [
+                "FGGGGGLGGF",
+                "FGGGGGLGGF",
+                "FGGGGGLGGF",
+                "FGGGGGLGGF",
+                "FGGGGGGGGF",
+                "FGGFFGGGGF",
+            ],
+            editable_columns={1, 2},
+            units={
+                (5, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (4, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (4, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+
+            }
+        ),
+        "Plinth Panic!",
+        Dialogue.from_list([
+            ("That general thought he could knock us out? Well he was quite wrong!", GENERAL_IMAGE, None),
+            ("But what's this? It seems there are some plinths on this battlefield?", GENERAL_IMAGE, None),
+            ("Our troops could break them down, but it might take them a while... A stronger unit would get it down faster!", GENERAL_IMAGE, None),
+        ]),
+        bonus_troops=2
+    ),
+        Level(
+        Board.from_string(
+            [
+
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+                "FGGGGGGGGGGGGGGGGF",
+
+
+            ],
+            editable_columns={1, 2},
+            units={
+                (1, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (2, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 3): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+                (3, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            },
+        ),
+        "The best level ever",
+        opening_dialogue,
         bonus_troops=2
     ),
 
