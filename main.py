@@ -1,3 +1,5 @@
+import json
+from copy import deepcopy
 from typing import Optional
 
 import pygame
@@ -6,7 +8,6 @@ from pygame.font import Font
 
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
-from dialogue import opening_dialogue
 from gamestate import GameState
 from level import levels
 from tile_images import PLAY_IMAGE, ORANGE_BG
@@ -96,7 +97,7 @@ def main():
 
         elif current_game_state == GameState.DIALOGUE:
 
-            board.render(screen, frame_count, current_game_state)
+            board.render(screen, current_game_state, frame_count)
 
             overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
             overlay.fill((0, 0, 0, 100))
@@ -181,6 +182,10 @@ def main():
                 elif event.key == pygame.K_TAB:
                     if current_game_state == GameState.DIALOGUE:
                         current_dialogue = current_dialogue.next
+                elif event.key == pygame.K_m:
+                    with open("Board.json", "r") as json_file:
+                        serial_board = json.load(json_file)
+                        board = Board.from_serialized(serial_board)
                 elif event.key == pygame.K_ESCAPE:
                     if current_game_state == GameState.DIALOGUE:
                         current_game_state = GameState.EDIT_TROOPS
@@ -189,7 +194,10 @@ def main():
                     elif current_game_state == GameState.EDIT_TROOPS:
                         current_game_state = GameState.EDIT_LEVEL
                     elif current_game_state == GameState.EDIT_LEVEL:
-                        backup_board = board
+                        backup_board = deepcopy(board)
+                        json_data = json.dumps(backup_board.serialize_board(), default= lambda o: o.__dict__)
+                        with open("Board.json", "w") as json_file:
+                            json_file.write(json_data)
                         current_game_state = GameState.EDIT_TROOPS
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()

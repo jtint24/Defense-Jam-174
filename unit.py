@@ -1,5 +1,6 @@
+from copy import deepcopy
 from enum import Enum
-from typing import Self, Optional, NamedTuple, Tuple
+from typing import Self, Optional, NamedTuple, Tuple, Dict
 
 import pygame
 from pygame import Surface
@@ -10,10 +11,10 @@ from tile_images import FINISH_LINE_IMAGE, WATER_IMAGE, GRASS_IMAGE, ORANGE_IMAG
 
 
 class Direction(Enum):
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
+    UP = "UP"
+    DOWN = "DOWN"
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
 
 
 class UnitType(Enum):
@@ -96,6 +97,12 @@ class Unit:
                 case _:
                     return retval
 
+    def serialize_unit(self) -> dict[str, int | str]:
+        return {"Unit Rank": self.type.value, "Direction": self.direction.value, "Team": self.team.value}
+
+    @classmethod
+    def from_serialized(cls, serial_data: dict[str, int | str]) -> Self:
+        return Unit(UnitType(serial_data["Unit Rank"]), Direction(serial_data["Direction"]), Team(serial_data["Team"]))
 
     def __eq__(self, other: Self):
         return other is not None and (
@@ -104,6 +111,17 @@ class Unit:
                 self.team == other.team and
                 self.defense == other.defense
         )
+
+    def __deepcopy__(self, memo={}):
+        id_self = id(self)  # memoization avoids unnecessary recursion
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.type, memo),
+                deepcopy(self.direction, memo),
+                deepcopy(self.team, memo))
+            memo[id_self] = _copy
+        return _copy
 
 
 
@@ -188,6 +206,40 @@ class Tile:
                     self.unit.rotate_cw()
                 else:
                     self.unit.rotate_ccw()
+
+    def serialize_tile(self) -> Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]:
+        tile_str = ""
+        unit_dict = None
+        tile_str = self.type.value.char_code
+        """
+        match self.type:
+            case TileType.GRASS:
+                tile_str = "GRASS"
+            case TileType.WATER:
+                tile_str = "WATER"
+            case TileType.TRAMPOLINE:
+                tile_str = "TRAMPOLINE"
+            case TileType.WALL:
+                tile_str = "WALL"
+            case TileType.DEADWALL:
+                tile_str = "REMAINS"
+            case TileType.TRAPDOOR:
+                tile_str = "LAVA"
+            case TileType.FINISH_LINE:
+                tile_str = "EXIT"
+            case TileType.TUNNEL:
+                tile_str = "TUNNEL" """
+        if self.unit is not None:
+            unit_dict = self.unit.serialize_unit()
+        return {"Tile Type": tile_str, "Unit Data": unit_dict, "Player Placeable": self.is_placeable, "Wall Health": self.health, "Rotation": self.rotation.value, "Teleport Destination": self.destination}
+
+    @classmethod
+    def from_serialized(cls, serialized_data: Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]) -> Self:
+        unit_from_serial = None
+        if serialized_data["Unit Data"] is not None:
+            unit_from_serial = Unit.from_serialized(serialized_data["Unit Data"])
+        return Tile(TileType.from_str(serialized_data["Tile Type"]), unit_from_serial, serialized_data["Player Placeable"], serialized_data["Wall Health"], Direction(serialized_data["Rotation"]), serialized_data["Teleport Destination"])
+
     def __eq__(self, other: Self):
         return other is not None and (
             self.type == other.type and
@@ -197,4 +249,18 @@ class Tile:
             self.destination == other.destination and
             self.rotation == other.rotation
         )
+
+    def __deepcopy__(self, memo={}):
+        id_self = id(self)  # memoization avoids unnecessary recursion
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.type, memo),
+                deepcopy(self.unit, memo),
+                deepcopy(self.is_placeable, memo),
+                deepcopy(self.health, memo),
+                deepcopy(self.rotation, memo),
+                deepcopy(self.destination, memo))
+            memo[id_self] = _copy
+        return _copy
 

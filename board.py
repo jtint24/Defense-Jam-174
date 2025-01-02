@@ -1,3 +1,4 @@
+from copy import deepcopy
 from enum import Enum
 from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
 
@@ -43,6 +44,18 @@ class Board:
             tiles[unit_point[0]][unit_point[1]].unit = units[unit_point]
 
         return Board(tiles)
+
+    @classmethod
+    def from_serialized(cls, serialized_data: List[List[Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]]]) -> Self:
+        tiles = []
+        for serial_row in serialized_data:
+            tile_row = []
+            for serial_tile in serial_row:
+                tile_row.append(Tile.from_serialized(serial_tile))
+            tiles.append(tile_row)
+
+        return Board(tiles)
+
 
     def render(self, screen: Surface, game_state: GameState, frame: int):
         # Calculate the offsets to center the board on the screen
@@ -477,3 +490,22 @@ class Board:
             return new_tiles[row_idx][col_idx], row_idx, col_idx
         return None, row_idx, col_idx
 
+    def serialize_board(self) -> List[List[Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]]]:
+        serialized_tiles = []
+        for row in self.tiles:
+            serialized_row = []
+            for tile in row:
+                serialized_row.append(tile.serialize_tile())
+            serialized_tiles.append(serialized_row)
+
+        return serialized_tiles
+
+
+    def __deepcopy__(self, memo={}):
+        id_self = id(self)  # memoization avoids unnecessary recursion
+        _copy = memo.get(id_self)
+        if _copy is None:
+            _copy = type(self)(
+                deepcopy(self.tiles, memo))
+            memo[id_self] = _copy
+        return _copy
