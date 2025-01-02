@@ -9,7 +9,7 @@ from pygame.font import Font
 from board import Board, Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
 from gamestate import GameState
-from level import levels
+from level import Level
 from tile_images import PLAY_IMAGE, ORANGE_BG
 from ui import ImageButton, TextButton
 from unit import TileType
@@ -40,8 +40,25 @@ def main():
 
     level_idx = 3
 
+    levels = []
+    with open("levels_converted.json", "r") as json_file:
+        levels_serialized = json.load(json_file)
+        for level_serial in levels_serialized.values():
+            levels.append(Level.from_serialized(level_serial))
+
     board = levels[level_idx].board
     level_name = levels[level_idx].name
+
+
+    """
+    mega_dict = {}
+    for level_id, level in enumerate(levels):
+        mega_dict["Level " + str(level_id+1)] = level.serialize()
+
+    json_data = json.dumps(mega_dict, default=lambda o: o.__dict__)
+    with open("levels_converted.json", "w") as json_file:
+        json_file.write(json_data)
+    """
 
     max_units = 7
     bonus_troops = 0  # Bonus for clearing the level

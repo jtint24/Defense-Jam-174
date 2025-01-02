@@ -1,5 +1,4 @@
 from copy import deepcopy
-from enum import Enum
 from typing import NamedTuple, List, Optional, Self, Tuple, Set, Dict
 
 import pygame
@@ -144,10 +143,12 @@ class Board:
                 if tile.unit is not None:
                     #Trampolines
                     tile.trampoline_bounce()
+                    #Lava
                     if self.tiles[row_idx][col_idx].type == TileType.TRAPDOOR:
                         self.animations.append(UnitDeathAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
                         self.units_killed_by_team[new_tiles[row_idx][col_idx].unit.team] += 1
                         new_tiles[row_idx][col_idx].unit = None
+                    #Teleporter
                     elif self.tiles[row_idx][col_idx].type == TileType.TUNNEL:
                         dest = self.tiles[row_idx][col_idx].destination
                         print(str(dest[0])  + ' ' + str(dest[1]))

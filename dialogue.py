@@ -1,15 +1,40 @@
-from typing import Self, Tuple, List, Optional
+from enum import Enum
+from typing import Self, Tuple, List, Optional, NamedTuple, Dict
 
 import pygame
 from pygame import Surface
 from pygame.font import Font
 
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from tile_images import GENERAL_IMAGE, DEFENSE_OVERLAY, OFFENSE_OVERLAY
+from tile_images import GENERAL_IMAGE, DEFENSE_OVERLAY, OFFENSE_OVERLAY, GENERAL_APPLE_IMAGE
 
+
+class DialogueImageData(NamedTuple):
+    image: Surface
+    name: str
+
+class DialogueImage(Enum):
+    GENERAL_ORANGE = DialogueImageData(GENERAL_IMAGE, 'GENERAL_ORANGE')
+    GENERAL_APPLE = DialogueImageData(GENERAL_APPLE_IMAGE, 'GENERAL_APPLE')
+
+    @classmethod
+    def from_str(cls, sname: str):
+        for image_type in DialogueImage:
+            if image_type.value.name == sname:
+                return image_type
+
+class DialogueOverlayImage(Enum):
+    OFFENSE_OVERLAY = DialogueImageData(OFFENSE_OVERLAY, 'OFFENSE_OVERLAY')
+    DEFENSE_OVERLAY = DialogueImageData(DEFENSE_OVERLAY, 'DEFENSE_OVERLAY')
+
+    @classmethod
+    def from_str(cls, sname: str):
+        for image_type in DialogueOverlayImage:
+            if image_type.value.name == sname:
+                return image_type
 
 class Dialogue:
-    def __init__(self, text: str, next: Self = None, speaker_image: Surface = None, presentation_image: Surface = None):
+    def __init__(self, text: str, next: Self = None, speaker_image: DialogueImage = None, presentation_image: DialogueImage= None):
         self.text = text
         self.speaker_image = speaker_image
         self.next = next
@@ -17,7 +42,7 @@ class Dialogue:
         self.first_appear_frame = None
 
     @staticmethod
-    def from_list(items: List[Tuple[str, Optional[Surface], Optional[Surface]]]):
+    def from_list(items: List[Tuple[str, Optional[DialogueImage], Optional[DialogueOverlayImage]]]):
         prev = None
         first = None
         for text, sp_image, pr_image in items:
@@ -104,34 +129,49 @@ class Dialogue:
 
         # Render speaker image, if available
         if self.speaker_image is not None:
-            sp_width, sp_height = self.speaker_image.get_size()
+            sp_width, sp_height = self.speaker_image.value.image.get_size()
             speaker_x = inner_box_rect.left + 10
             speaker_y = inner_box_rect.top - sp_height - 8  # 8 = line of width
-            screen.blit(self.speaker_image, (speaker_x, speaker_y))
+            screen.blit(self.speaker_image.value.image, (speaker_x, speaker_y))
 
         # Render presentation image, if available
         if self.presentation_image is not None:
-            pr_width, pr_height = self.presentation_image.get_size()
+            pr_width, pr_height = self.presentation_image.value.image.get_size()
             presentation_x = (SCREEN_WIDTH - pr_width) // 2
             presentation_y = (SCREEN_HEIGHT // 2 - 3 * pr_height // 4)
-            screen.blit(self.presentation_image, (presentation_x, presentation_y))
+            screen.blit(self.presentation_image.value.image, (presentation_x, presentation_y))
+
+    def serialize(self) -> List[Dict[str, Optional[str]]]:
+        dialogue_dict = []
+        i = self
+        while i is not None:
+            dialogue_dict.append({"Text": self.text,"Speaker Image": self.speaker_image.value.name if self.speaker_image is not None else None, "Overlay Image": self.presentation_image.value.name if self.presentation_image is not None else None})
+            i = i.next
+        return dialogue_dict
+
+    @classmethod
+    def from_serialized(cls, dialogue_dict: List[Dict[str, Optional[str]]]) -> Self:
+        dialogue_list = []
+        for dict in dialogue_dict:
+            dialogue_list.append((dict["Text"], DialogueImage.from_str(dict["Speaker Image"]) , DialogueOverlayImage.from_str(dict["Overlay Image"])))
+        return Dialogue.from_list(dialogue_list)
 
 opening_dialogue = Dialogue.from_list(
     [
 
-        ("Alright, corporal! Here's the battlefield laid out for you...", GENERAL_IMAGE, None),
-        ("You can see that those dastardly apples are already there.", GENERAL_IMAGE, None),
-        ("Your objective? To send as many oranges across the battlefield as possible!", GENERAL_IMAGE, None),
-        ("But beware! Those apples are going to try and get across too. And when our troops collide, a fight is inevitable.", GENERAL_IMAGE, None),
-        ("Whoever gets more troops to the other side, wins!", GENERAL_IMAGE, None),
-        ("And... I hate to tell you this, but we are outnumbered. We merely have 2 troops at our disposal, and they seem to have 3!", GENERAL_IMAGE, None),
-        ("Fear not! If we position our troops strategically, we shall emerge the victors!", GENERAL_IMAGE, None),
-        ("Troops positioned in ^vertical ^lines will form an incredible flank! This will increase their defense astronomically!", GENERAL_IMAGE, DEFENSE_OVERLAY),
-        ("The longer the flank, the greater the defense!", GENERAL_IMAGE, None),
-        ("And troops positioned in ^horizontal ^lines will line up to upgrade their fighting power, transforming into yet more advanced soldiers!", GENERAL_IMAGE, OFFENSE_OVERLAY),
-        ("If our enemies form a flank, a long line of soldiers might be just the thing to break it to smithereens!", GENERAL_IMAGE, OFFENSE_OVERLAY),
-        ("I think a ^vertical flank ought to dispatch these neer-do-wells right quick!", GENERAL_IMAGE, None),
-        ("Alright, simply click to place your troops, and remember, think strategically!", GENERAL_IMAGE, None),
-        ("Once you've thought everything through, press the play button to lead the charge!", GENERAL_IMAGE, None),
+        ("Alright, corporal! Here's the battlefield laid out for you...", DialogueImage.GENERAL_ORANGE, None),
+        ("You can see that those dastardly apples are already there.", DialogueImage.GENERAL_ORANGE, None),
+        ("Your objective? To send as many oranges across the battlefield as possible!", DialogueImage.GENERAL_ORANGE, None),
+        ("But beware! Those apples are going to try and get across too. And when our troops collide, a fight is inevitable.", DialogueImage.GENERAL_ORANGE, None),
+        ("Whoever gets more troops to the other side, wins!", DialogueImage.GENERAL_ORANGE, None),
+        ("And... I hate to tell you this, but we are outnumbered. We merely have 2 troops at our disposal, and they seem to have 3!", DialogueImage.GENERAL_ORANGE, None),
+        ("Fear not! If we position our troops strategically, we shall emerge the victors!", DialogueImage.GENERAL_ORANGE, None),
+        ("Troops positioned in ^vertical ^lines will form an incredible flank! This will increase their defense astronomically!", DialogueImage.GENERAL_ORANGE, DEFENSE_OVERLAY),
+        ("The longer the flank, the greater the defense!", DialogueImage.GENERAL_ORANGE, None),
+        ("And troops positioned in ^horizontal ^lines will line up to upgrade their fighting power, transforming into yet more advanced soldiers!", DialogueImage.GENERAL_ORANGE, OFFENSE_OVERLAY),
+        ("If our enemies form a flank, a long line of soldiers might be just the thing to break it to smithereens!", DialogueImage.GENERAL_ORANGE, OFFENSE_OVERLAY),
+        ("I think a ^vertical flank ought to dispatch these neer-do-wells right quick!", DialogueImage.GENERAL_ORANGE, None),
+        ("Alright, simply click to place your troops, and remember, think strategically!", DialogueImage.GENERAL_ORANGE, None),
+        ("Once you've thought everything through, press the play button to lead the charge!", DialogueImage.GENERAL_ORANGE, None),
     ]
 )
