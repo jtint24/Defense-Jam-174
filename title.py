@@ -7,7 +7,7 @@ from ui import TextButton
 
 def render_title_screen(screen: Surface, title_font: Font, start_button: TextButton):
     # Draw the title
-    title_surface = title_font.render("My Game Title", True, (0, 0, 0))
+    title_surface = title_font.render("Warchard", True, (0, 0, 0))
     title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 4))
     screen.blit(title_surface, title_rect)
 
