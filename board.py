@@ -25,25 +25,6 @@ class Board:
         self.animations: List[Animation] = []
         self.updates = 0
 
-    @staticmethod
-    def row_from_string(row_str: str) -> List[Tile]:
-        return [
-            Tile(TileType.from_str(code), None)
-            for code in row_str
-        ]
-
-    @classmethod
-    def from_string(cls, board_strs: List[str], editable_columns: Set[int], units: Dict[Tuple[int, int], Unit]) -> Self:
-        tiles = [cls.row_from_string(row_str) for row_str in board_strs]
-        for row_idx, row in enumerate(tiles):
-            for col_idx, tile in enumerate(row):
-                tiles[row_idx][col_idx].is_placeable = col_idx in editable_columns
-
-        for unit_point in units:
-            tiles[unit_point[0]][unit_point[1]].unit = units[unit_point]
-
-        return Board(tiles)
-
     @classmethod
     def from_serialized(cls, serialized_data: List[List[Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]]]) -> Self:
         tiles = []
@@ -491,7 +472,7 @@ class Board:
             return new_tiles[row_idx][col_idx], row_idx, col_idx
         return None, row_idx, col_idx
 
-    def serialize_board(self) -> List[List[Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]]]:
+    def serialize(self) -> List[List[Dict[str, Optional[Dict[str, int | str]] | bool | int | str | Tuple[int]]]]:
         serialized_tiles = []
         for row in self.tiles:
             serialized_row = []
@@ -500,7 +481,6 @@ class Board:
             serialized_tiles.append(serialized_row)
 
         return serialized_tiles
-
 
     def __deepcopy__(self, memo={}):
         id_self = id(self)  # memoization avoids unnecessary recursion

@@ -1,15 +1,17 @@
 import json
+import os
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, List
 
 import pygame
 from pygame import MOUSEBUTTONDOWN, Surface
 from pygame.font import Font
 
 from board import Board, Unit, Direction, Team, UnitType
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, GENERATE_FILE, LOAD_FILE
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, GENERATE_FILE, LOAD_FILE, ENABLE_EDITING
 from gamestate import GameState
 from level import Level, level_data
+from savedata import save_levels, load_levels, save_user_state, load_user_state
 from tile_images import PLAY_IMAGE, ORANGE_BG
 from ui import ImageButton, TextButton
 from unit import TileType
@@ -31,7 +33,10 @@ def main():
     next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
     start_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, "Start Game", big_font)
 
-    mode = 1
+    build_mode = 1
+    placed_units = 0
+    levels: List[Level] = []
+    clock = pygame.time.Clock()
 
     backup_board: Optional[Board] = None
 
@@ -39,41 +44,23 @@ def main():
     running = True
 
     level_idx = 0
-
+    max_units = 7
+    troops_killed = 0
+    next_round_troops = -1
 
     if GENERATE_FILE:
-        mega_dict = {}
-        levels = level_data
-        for level_id, level in enumerate(levels):
-            mega_dict["Level " + str(level_id + 1)] = level.serialize()
-
-        json_data = json.dumps(mega_dict, default=lambda o: o.__dict__)
-        with open("levels_converted.json", "w") as json_file:
-            json_file.write(json_data)
+        save_levels("levels_converted.json", level_data)
 
     if LOAD_FILE:
-        levels = []
-        with open("levels_converted.json", "r") as json_file:
-            levels_serialized = json.load(json_file)
-            for level_serial in levels_serialized.values():
-                levels.append(Level.from_serialized(level_serial))
+        levels = load_levels("new_levels.json")
+        if os.path.exists("save.json"):
+            save = load_user_state("save.json")
+            level_idx = save["Level"]
+            max_units = save["Troops"]
+
 
     board = levels[level_idx].board
     level_name = levels[level_idx].name
-
-
-    mega_dict = {}
-    for level_id, level in enumerate(levels):
-        mega_dict["Level " + str(level_id+1)] = level.serialize()
-
-    json_data = json.dumps(mega_dict, default=lambda o: o.__dict__)
-    with open("levels_converted.json", "w") as json_file:
-        json_file.write(json_data)
-
-    max_units = 7
-    bonus_troops = 0  # Bonus for clearing the level
-    troops_killed = 0
-    next_round_troops = -1
 
     current_dialogue = levels[level_idx].opening_dialogue
 
@@ -121,6 +108,7 @@ def main():
             # Show "Next Level" button only if the game is not over
             if next_round_troops > 0 and len(levels) > level_idx+1:
                 next_button.draw(screen)
+                save_user_state("save.json", {"Level": level_idx+1, "Troops": next_round_troops})
 
         elif current_game_state == GameState.DIALOGUE:
 
@@ -187,29 +175,29 @@ def main():
                 running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    mode = 1
+                    build_mode = 1
                 elif event.key == pygame.K_2:
-                    mode = 2
+                    build_mode = 2
                 elif event.key == pygame.K_3:
-                    mode = 3
+                    build_mode = 3
                 elif event.key == pygame.K_4:
-                    mode = 4
+                    build_mode = 4
                 elif event.key == pygame.K_5:
-                    mode = 5
+                    build_mode = 5
                 elif event.key == pygame.K_6:
-                    mode = 6
-                elif event.key == pygame.K_b:
+                    build_mode = 6
+                elif event.key == pygame.K_b and ENABLE_EDITING:
                     if backup_board is not None:
                         board = backup_board
                         current_game_state = GameState.EDIT_LEVEL
-                elif event.key == pygame.K_MINUS:
+                elif event.key == pygame.K_MINUS and ENABLE_EDITING:
                     max_units -= 1
-                elif event.key == pygame.K_EQUALS:
+                elif event.key == pygame.K_EQUALS and ENABLE_EDITING:
                     max_units += 1
                 elif event.key == pygame.K_TAB:
                     if current_game_state == GameState.DIALOGUE:
                         current_dialogue = current_dialogue.next
-                elif event.key == pygame.K_m:
+                elif event.key == pygame.K_m and ENABLE_EDITING:
                     with open("Board.json", "r") as json_file:
                         serial_board = json.load(json_file)
                         board = Board.from_serialized(serial_board)
@@ -218,13 +206,12 @@ def main():
                         current_game_state = GameState.EDIT_TROOPS
                         board.animations = []
                         board.update_strength_defense(frame_count)
-                    elif current_game_state == GameState.EDIT_TROOPS:
+                    elif current_game_state == GameState.EDIT_TROOPS and ENABLE_EDITING:
                         current_game_state = GameState.EDIT_LEVEL
                     elif current_game_state == GameState.EDIT_LEVEL:
                         backup_board = deepcopy(board)
-                        json_data = json.dumps(backup_board.serialize_board(), default= lambda o: o.__dict__)
-                        with open("Board.json", "w") as json_file:
-                            json_file.write(json_data)
+                        levels[level_idx].board = board
+                        save_levels("new_levels.json", levels)
                         current_game_state = GameState.EDIT_TROOPS
             elif event.type == MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
@@ -299,7 +286,7 @@ def main():
                         print("in bounds")
 
                         # Add or remove units based on current state
-                        if mode == 1:
+                        if build_mode == 1:
                             if tile.unit is None:
                                 if tile.is_free() and not tile.is_placeable:
                                     print("Adding Unit")
@@ -308,7 +295,7 @@ def main():
                                 tile.unit = None
                             elif tile.unit.team is Team.APPLE:
                                 tile.unit = None
-                        elif mode == 2:
+                        elif build_mode == 2:
                             if tile.type == TileType.WALL:
                                 tile.type = TileType.TRAMPOLINE
                             elif tile.type == TileType.TRAMPOLINE:
@@ -319,13 +306,13 @@ def main():
                                 tile.type = TileType.TUNNEL
                             else:
                                 tile.type = TileType.WALL
-                        elif mode == 3:
+                        elif build_mode == 3:
                             if tile.unit is not None:
                                 tile.unit.rotate_cw()
-                        elif mode == 4:
+                        elif build_mode == 4:
                             if tile.type == TileType.TRAMPOLINE:
                                 tile.rotate_cw()
-                        elif mode == 5:
+                        elif build_mode == 5:
                             if tile.type == TileType.GRASS:
                                 tile.type = TileType.WATER
                             else:
@@ -336,8 +323,7 @@ def main():
 
                     # Check if play button was clicked
 
-
-        pygame.time.delay(20)
+        clock.tick(50)
 
         # Update board during PLAY_TROOPS phase
         if current_game_state == GameState.PLAY_TROOPS:
@@ -352,6 +338,7 @@ def main():
                     current_game_state = GameState.EDIT_TROOPS
                     board.animations = []
                     board.update_strength_defense(frame_count)
+
 
     pygame.quit()
 

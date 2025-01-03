@@ -133,20 +133,21 @@ class TileTypeData(NamedTuple):
 
 
 class TileType(Enum):
-    GRASS = TileTypeData(True, GRASS_IMAGE, "G")
-    WATER = TileTypeData(False, WATER_IMAGE, "W")
-    TRAMPOLINE = TileTypeData(True, TRAMPOLINE_SLASH, "T")
-    WALL = TileTypeData(False, GRAVESTONE_IMAGE, "L")
-    DEADWALL = TileTypeData(True, BROKEN_GRAVESTONE_IMAGE, "D")
-    TRAPDOOR = TileTypeData(True, LAVA_IMAGE, "R")
-    FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "F")
-    TUNNEL = TileTypeData(True, GRAVESTONE_IMAGE, "N")
+    GRASS = TileTypeData(True, GRASS_IMAGE, "GRASS")
+    WATER = TileTypeData(False, WATER_IMAGE, "WATER")
+    TRAMPOLINE = TileTypeData(True, TRAMPOLINE_SLASH, "TRAMPOLINE")
+    WALL = TileTypeData(False, GRAVESTONE_IMAGE, "WALL")
+    DEADWALL = TileTypeData(True, BROKEN_GRAVESTONE_IMAGE, "REMAINS")
+    TRAPDOOR = TileTypeData(True, LAVA_IMAGE, "LAVA")
+    FINISH_LINE = TileTypeData(True, FINISH_LINE_IMAGE, "EXIT")
+    TUNNEL = TileTypeData(True, GRAVESTONE_IMAGE, "TUNNEL")
 
     @classmethod
     def from_str(cls, name: str):
         for tile_type in TileType:
             if tile_type.value.char_code == name:
                 return tile_type
+        return TileType.GRASS
 
 class Tile:
     def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, health:int = 5,
@@ -211,24 +212,6 @@ class Tile:
         tile_str = ""
         unit_dict = None
         tile_str = self.type.value.char_code
-        """
-        match self.type:
-            case TileType.GRASS:
-                tile_str = "GRASS"
-            case TileType.WATER:
-                tile_str = "WATER"
-            case TileType.TRAMPOLINE:
-                tile_str = "TRAMPOLINE"
-            case TileType.WALL:
-                tile_str = "WALL"
-            case TileType.DEADWALL:
-                tile_str = "REMAINS"
-            case TileType.TRAPDOOR:
-                tile_str = "LAVA"
-            case TileType.FINISH_LINE:
-                tile_str = "EXIT"
-            case TileType.TUNNEL:
-                tile_str = "TUNNEL" """
         if self.unit is not None:
             unit_dict = self.unit.serialize_unit()
         return {"Tile Type": tile_str, "Unit Data": unit_dict, "Player Placeable": self.is_placeable, "Wall Health": self.health, "Rotation": self.rotation.value, "Teleport Destination": self.destination}
