@@ -21,7 +21,8 @@ pygame.init()
 
 # Set up the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Tile Board")
+
+pygame.display.set_caption("Warchard")
 
 big_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
 small_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 4)
@@ -30,7 +31,6 @@ title_font = pygame.font.Font("resources/fonts/CDStitleUnicaseV.ttf", 8 * 8)
 play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
 next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
 start_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, "Start Game", big_font)
-
 
 def main():
 
@@ -46,7 +46,9 @@ def main():
     running = True
 
     level_idx = 0
-    max_units = 7
+
+    max_units = 2
+    bonus_troops = 0  # Bonus for clearing the level
     troops_killed = 0
     next_round_troops = -1
 
@@ -451,7 +453,6 @@ def render_checkerboard_background(screen: Surface, frame_count: int):
         for x in range(-screen_width//2, screen_width, tile_width):
             if ((x // tile_width) % 4 == 0 and y // tile_width % 4 == 0) or ((x // tile_width) % 4 == 2 and y // tile_width % 4 == 2):
                 screen.blit(tile_image, (x+(frame_count % anim_length)/2, y+(frame_count % anim_length)/2))
-
 
 if __name__ == "__main__":
     main()
