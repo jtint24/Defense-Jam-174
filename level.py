@@ -21,11 +21,11 @@ class Level:
         return Level(
             Board.from_serialized(serialized_data["Board"]),
             serialized_data["Name"],
-            Dialogue.from_serialized(serialized_data["Opening Dialogue"]),
+            Dialogue.from_serialized(serialized_data["Opening Dialogue"]) if serialized_data["Opening Dialogue"] is not None else None,
             serialized_data["Bonus Troops"])
 
 
-levels = [
+level_data = [
     Level(
         Board.from_string(
             [
@@ -103,93 +103,176 @@ levels = [
         ]),
         bonus_troops=3
     ),
-        Level(
-        Board.from_string(
-            [
-                "FGGGLGGF",
-                "FGGGLGGF",
-                "FGGGLGGF",
-                "FGGGLGGF",
-                "FGGGGGGF",
-                "FGGGGGGF",
-            ],
-            editable_columns={1, 2},
-            units={
-                (5, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (4, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (4, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+    Level(
+    Board.from_string(
+        [
+            "FGGGLLGF",
+            "FGGGLGGF",
+            "FGGGLGGF",
+            "FGGGLGGF",
+            "FGGGGGGF",
+            "FGGGGGGF",
+        ],
+        editable_columns={1, 2},
+        units={
+            (5, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (5, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
 
-            }
+        }
         ),
         "Plinth Panic!",
         Dialogue.from_list([
             ("That general thought he could knock us out? Well he was quite wrong!", DialogueImage.GENERAL_ORANGE, None),
             ("But what's this? It seems there are some plinths on this battlefield?", DialogueImage.GENERAL_ORANGE, None),
-            ("Our troops could break them down, but it might take them a while... A stronger unit would get it down faster!", DialogueImage.GENERAL_ORANGE, None),
+            ("Our troops could break them down, but they look tough... A stronger unit would get it down faster!", DialogueImage.GENERAL_ORANGE, None),
+            ("It might take them quite a while. I'll ^pause the action every 10 turns, to allow you to place down more troops if you need to!", DialogueImage.GENERAL_ORANGE, None)
         ]),
         bonus_troops=2
     ),
-        Level(
-        Board.from_string(
-            [
-                "FGGGGGLGGF",
-                "FGGGGGLGGF",
-                "FGGGGGLGGF",
-                "FGGGGGLGGF",
-                "FGGGGGGGGF",
-                "FGGFFGGGGF",
-            ],
-            editable_columns={1, 2},
-            units={
-                (5, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (4, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (2, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (4, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+    Level(
+    Board.from_string(
+        [
+            "FWGGGGGDDGGGGF",
+            "FGGGGGDGDGLGGF",
+            "FGGGGLGGGGLGGF",
+            "FGGGGLGGGDGGGF",
+            "FGGGGLGGDDGGGF",
+        ],
+        editable_columns={1, 2, 3},
+        units={
+            (0, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 11): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 10): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (0, 12): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 11): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 12): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 11): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 12): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
 
-            }
+        }
         ),
-        "Plinth Panic!",
-        Dialogue.from_list([
-            ("That general thought he could knock us out? Well he was quite wrong!", DialogueImage.GENERAL_ORANGE, None),
-            ("But what's this? It seems there are some plinths on this battlefield?", DialogueImage.GENERAL_ORANGE, None),
-            ("Our troops could break them down, but it might take them a while... A stronger unit would get it down faster!", DialogueImage.GENERAL_ORANGE, None),
-        ]),
-        bonus_troops=2
+        "Skirmish at the Ruins!",
+        None,
+        bonus_troops=3
     ),
-        Level(
-        Board.from_string(
-            [
 
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
-                "FGGGGGGGGGGGGGGGGF",
+Level(
+    Board.from_string(
+        [
+            "FGGGGGGGGGLGGF",
+            "FGGGGWGGGGLGGF",
+            "FGGGGGGGGGLGGF",
+            "FGGGGGLGGGLGGF",
+            "FGGGGGLGGGLGGF",
+        ],
+        editable_columns={1, 2, 3},
+        units={
+            (0, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (0, 12): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 11): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 12): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 11): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 12): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
 
-
-            ],
-            editable_columns={1, 2},
-            units={
-                (1, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (2, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 3): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 4): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-                (3, 5): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
-            },
+        }
         ),
-        "The best level ever",
-        opening_dialogue,
-        bonus_troops=2
+        "Voyage of the Dam!",
+        Dialogue.from_list(
+            [
+                ("You've really improved! We'll best those apples yet!", DialogueImage.GENERAL_ORANGE, None),
+                ("Really? Because I think you still ^stink!", DialogueImage.GENERAL_APPLE, None),
+                ("Apple general! Don't you think you've done enough?", DialogueImage.GENERAL_ORANGE, None),
+                ("Don't you think YOU'VE done enough?", DialogueImage.GENERAL_APPLE, None),
+                ("I fail to see how that's a response to me...", DialogueImage.GENERAL_ORANGE, None),
+                ("YOU ARE OLD AND STUPID! I'll dispatch your corporal, then you!", DialogueImage.GENERAL_APPLE, None),
+                ("Just try taking out THIS army!", DialogueImage.GENERAL_APPLE, None),
+            ]
+        ),
+        bonus_troops=3
     ),
+
+    Level(
+    Board.from_string(
+        [
+            "FWGGGGGGGGGGGF",
+            "FGGGGGGGGGRGGF",
+            "FGGGGGGGGGRGGF",
+            "FGGGGGGGGGRGGF",
+            "FWGGGGGGGGGGGF",
+        ],
+        editable_columns={1, 2, 3},
+        units={
+            (1, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (2, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+        }
+        ),
+        "Magma Melee!",
+        Dialogue.from_list(
+            [
+                ("Blast! There seems to be lava on the field!", DialogueImage.GENERAL_ORANGE, None),
+                ("Those apples are up to their old tactics yet again... any troops that walk into it will surely be lost.", DialogueImage.GENERAL_ORANGE, None),
+                ("But how shall we battle in this environment? ", DialogueImage.GENERAL_ORANGE, None),
+            ]
+        ),
+        bonus_troops=3
+    ),
+
+Level(
+    Board.from_string(
+        [
+            "FGGGGGGGRGGGF",
+            "FGGGGGGGRGGGF",
+            "FGGGGLGGGGGGF",
+            "FGGGGLGGGGGGF",
+            "FGGGGLGGGGGGF",
+            "FWGGGGGGGGGGF",
+        ],
+        editable_columns={1, 2, 3, 4},
+        units={
+            (0, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 6): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (0, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (1, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (3, 8): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 7): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (5, 10): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (5, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 10): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+            (4, 9): Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE),
+
+        }
+        ),
+        "The Final Battle",
+        Dialogue.from_list(
+            [
+                ("Hmm... the final battle!", DialogueImage.GENERAL_ORANGE, None),
+                ("But that means...", DialogueImage.GENERAL_ORANGE, None),
+                ("That's right, you old man! I'm here!", DialogueImage.GENERAL_APPLE, None),
+                ("I'm throwing all my remaining troops at you!", DialogueImage.GENERAL_APPLE, None),
+                ("You and your corporal should prepare to face your demise!", DialogueImage.GENERAL_APPLE, None),
+            ]
+        ),
+        bonus_troops=3
+    ),
+
+
+
+
 
 ]

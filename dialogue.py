@@ -145,7 +145,7 @@ class Dialogue:
         dialogue_dict = []
         i = self
         while i is not None:
-            dialogue_dict.append({"Text": self.text,"Speaker Image": self.speaker_image.value.name if self.speaker_image is not None else None, "Overlay Image": self.presentation_image.value.name if self.presentation_image is not None else None})
+            dialogue_dict.append({"Text": i.text,"Speaker Image": i.speaker_image.value.name if i.speaker_image is not None else None, "Overlay Image": i.presentation_image.value.name if i.presentation_image is not None else None})
             i = i.next
         return dialogue_dict
 
@@ -166,10 +166,10 @@ opening_dialogue = Dialogue.from_list(
         ("Whoever gets more troops to the other side, wins!", DialogueImage.GENERAL_ORANGE, None),
         ("And... I hate to tell you this, but we are outnumbered. We merely have 2 troops at our disposal, and they seem to have 3!", DialogueImage.GENERAL_ORANGE, None),
         ("Fear not! If we position our troops strategically, we shall emerge the victors!", DialogueImage.GENERAL_ORANGE, None),
-        ("Troops positioned in ^vertical ^lines will form an incredible flank! This will increase their defense astronomically!", DialogueImage.GENERAL_ORANGE, DEFENSE_OVERLAY),
+        ("Troops positioned in ^vertical ^lines will form an incredible flank! This will increase their defense astronomically!", DialogueImage.GENERAL_ORANGE, DialogueOverlayImage.DEFENSE_OVERLAY),
         ("The longer the flank, the greater the defense!", DialogueImage.GENERAL_ORANGE, None),
-        ("And troops positioned in ^horizontal ^lines will line up to upgrade their fighting power, transforming into yet more advanced soldiers!", DialogueImage.GENERAL_ORANGE, OFFENSE_OVERLAY),
-        ("If our enemies form a flank, a long line of soldiers might be just the thing to break it to smithereens!", DialogueImage.GENERAL_ORANGE, OFFENSE_OVERLAY),
+        ("And troops positioned in ^horizontal ^lines will line up to upgrade their fighting power, transforming into yet more advanced soldiers!", DialogueImage.GENERAL_ORANGE, DialogueOverlayImage.OFFENSE_OVERLAY),
+        ("If our enemies form a flank, a long line of soldiers might be just the thing to break it to smithereens!", DialogueImage.GENERAL_ORANGE, DialogueOverlayImage.OFFENSE_OVERLAY),
         ("I think a ^vertical flank ought to dispatch these neer-do-wells right quick!", DialogueImage.GENERAL_ORANGE, None),
         ("Alright, simply click to place your troops, and remember, think strategically!", DialogueImage.GENERAL_ORANGE, None),
         ("Once you've thought everything through, press the play button to lead the charge!", DialogueImage.GENERAL_ORANGE, None),

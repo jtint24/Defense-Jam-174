@@ -7,9 +7,9 @@ from pygame import MOUSEBUTTONDOWN, Surface
 from pygame.font import Font
 
 from board import Board, Unit, Direction, Team, UnitType
-from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
+from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, GENERATE_FILE, LOAD_FILE
 from gamestate import GameState
-from level import Level
+from level import Level, level_data
 from tile_images import PLAY_IMAGE, ORANGE_BG
 from ui import ImageButton, TextButton
 from unit import TileType
@@ -38,19 +38,30 @@ def main():
     frame_count = 0
     running = True
 
-    level_idx = 3
+    level_idx = 0
 
-    levels = []
-    with open("levels_converted.json", "r") as json_file:
-        levels_serialized = json.load(json_file)
-        for level_serial in levels_serialized.values():
-            levels.append(Level.from_serialized(level_serial))
+
+    if GENERATE_FILE:
+        mega_dict = {}
+        levels = level_data
+        for level_id, level in enumerate(levels):
+            mega_dict["Level " + str(level_id + 1)] = level.serialize()
+
+        json_data = json.dumps(mega_dict, default=lambda o: o.__dict__)
+        with open("levels_converted.json", "w") as json_file:
+            json_file.write(json_data)
+
+    if LOAD_FILE:
+        levels = []
+        with open("levels_converted.json", "r") as json_file:
+            levels_serialized = json.load(json_file)
+            for level_serial in levels_serialized.values():
+                levels.append(Level.from_serialized(level_serial))
 
     board = levels[level_idx].board
     level_name = levels[level_idx].name
 
 
-    """
     mega_dict = {}
     for level_id, level in enumerate(levels):
         mega_dict["Level " + str(level_id+1)] = level.serialize()
@@ -58,7 +69,6 @@ def main():
     json_data = json.dumps(mega_dict, default=lambda o: o.__dict__)
     with open("levels_converted.json", "w") as json_file:
         json_file.write(json_data)
-    """
 
     max_units = 7
     bonus_troops = 0  # Bonus for clearing the level
