@@ -76,6 +76,7 @@ class Screen:
     def draw(self, surface: Surface, board: Board, current_game_state: GameState, frame_count: int, *args):
         pass
 
+
 class HorizontalRadioSelector(Drawable):
     class RadioItem(NamedTuple):
         icon: Surface
@@ -96,7 +97,7 @@ class HorizontalRadioSelector(Drawable):
         for item in self.items:
             screen.blit(item.icon, (draw_x, draw_y))
             if self.selected_item == item.name:
-                pygame.draw.rect(screen, (255, 100, 0), (draw_x, draw_y, 70, 70), 5)
+                pygame.draw.rect(screen, (255, 100, 0), (draw_x, draw_y, 64, 64), 5)
 
             draw_x += 70
             if draw_x > self.end_x:
@@ -108,7 +109,7 @@ class HorizontalRadioSelector(Drawable):
         draw_y = self.start_y
 
         for item in self.items:
-            if key == item.key or (draw_x <= pos.x < draw_x+70 and draw_y <= pos.y < draw_y+70):
+            if key == item.key or (draw_x <= pos[0] < draw_x+70 and draw_y <= pos[1] < draw_y+70):
                 self.selected_item = item.name
 
             draw_x += 70
