@@ -12,9 +12,9 @@ from level import Level, level_data
 import results_screen
 from savedata import save_levels, load_levels, save_user_state, load_user_state
 from tile_images import PLAY_IMAGE, ORANGE_BG, GRASS_IMAGE, WATER_IMAGE, TRAMPOLINE_SLASH, GRAVESTONE_IMAGE, \
-    BROKEN_GRAVESTONE_IMAGE, LAVA_IMAGE, FINISH_LINE_IMAGE, APPLE_IMAGE, ORANGE_IMAGE
+    BROKEN_GRAVESTONE_IMAGE, LAVA_IMAGE, FINISH_LINE_IMAGE, APPLE_IMAGE, ORANGE_IMAGE, ROTATE_CCW_IMAGE, ROTATE_CW_IMAGE
 from title import render_title_screen
-from ui import ImageButton, TextButton, Screen, HorizontalRadioSelector
+from ui import ImageButton, TextButton, Screen, HorizontalRadioSelector, RadioMeta, RadioButtons
 from unit import TileType, Tile
 
 pygame.init()
@@ -60,7 +60,6 @@ def main():
             level_idx = save["Level"]
             max_units = save["Troops"]
 
-
     board = levels[level_idx].board
     level_name = levels[level_idx].name
 
@@ -68,29 +67,42 @@ def main():
 
     current_game_state = GameState.TITLE_SCREEN
 
-    god_mode_editor = HorizontalRadioSelector(
+    god_mode_editor = RadioMeta(
         [
-            HorizontalRadioSelector.RadioItem(ORANGE_IMAGE, "orange", pygame.K_1),
-            HorizontalRadioSelector.RadioItem(APPLE_IMAGE, "apple", pygame.K_2),
-            HorizontalRadioSelector.RadioItem(GRASS_IMAGE, "grass", pygame.K_3),
-            HorizontalRadioSelector.RadioItem(WATER_IMAGE, "water", pygame.K_4),
-            HorizontalRadioSelector.RadioItem(TRAMPOLINE_SLASH, "trampoline", pygame.K_5),
-            HorizontalRadioSelector.RadioItem(GRAVESTONE_IMAGE, "wall", pygame.K_6),
-            HorizontalRadioSelector.RadioItem(BROKEN_GRAVESTONE_IMAGE, "remains", pygame.K_7),
-            HorizontalRadioSelector.RadioItem(LAVA_IMAGE, "lava", pygame.K_8),
-            HorizontalRadioSelector.RadioItem(FINISH_LINE_IMAGE, "finish line", pygame.K_9),
-            HorizontalRadioSelector.RadioItem(BROKEN_GRAVESTONE_IMAGE, "teleporter", pygame.K_0),
-        ],
-        SCREEN_WIDTH - 700,
-        6,
-        SCREEN_WIDTH - 70
+            HorizontalRadioSelector(
+                [
+                    HorizontalRadioSelector.RadioItem(ROTATE_CCW_IMAGE, "rotate ccw", None),
+                    HorizontalRadioSelector.RadioItem(ROTATE_CW_IMAGE, "rotate cw", None)
+                ],
+                6,
+                SCREEN_HEIGHT - 76,
+                146
+            ),
+            HorizontalRadioSelector(
+                [
+                    HorizontalRadioSelector.RadioItem(ORANGE_IMAGE, "orange", pygame.K_1),
+                    HorizontalRadioSelector.RadioItem(APPLE_IMAGE, "apple", pygame.K_2),
+                    HorizontalRadioSelector.RadioItem(GRASS_IMAGE, "grass", pygame.K_3),
+                    HorizontalRadioSelector.RadioItem(WATER_IMAGE, "water", pygame.K_4),
+                    HorizontalRadioSelector.RadioItem(TRAMPOLINE_SLASH, "trampoline", pygame.K_5),
+                    HorizontalRadioSelector.RadioItem(GRAVESTONE_IMAGE, "wall", pygame.K_6),
+                    HorizontalRadioSelector.RadioItem(BROKEN_GRAVESTONE_IMAGE, "remains", pygame.K_7),
+                    HorizontalRadioSelector.RadioItem(LAVA_IMAGE, "lava", pygame.K_8),
+                    HorizontalRadioSelector.RadioItem(FINISH_LINE_IMAGE, "finish line", pygame.K_9),
+                    HorizontalRadioSelector.RadioItem(BROKEN_GRAVESTONE_IMAGE, "teleporter", pygame.K_0),
+                ],
+                SCREEN_WIDTH - 700,
+                6,
+                SCREEN_WIDTH - 70
+            )
+        ]
     )
 
-    rotate_cw_button = ImageButton(6, SCREEN_HEIGHT - 70,64,64, WATER_IMAGE)
-    rotate_ccw_button = ImageButton(6 + 70, SCREEN_HEIGHT - 70, 64, 64, GRASS_IMAGE)
+    # rotate_cw_button = ImageButton(6, SCREEN_HEIGHT - 70, 64, 64, WATER_IMAGE)
+    # rotate_ccw_button = ImageButton(6 + 70, SCREEN_HEIGHT - 70, 64, 64, GRASS_IMAGE)
 
     edit_screen = EditScreen(
-        god_mode_editor, rotate_ccw_button, rotate_cw_button
+        god_mode_editor
     )
 
     while running:
@@ -242,10 +254,8 @@ def render_dialogue(board, current_game_state, frame_count):
 
 
 class EditScreen(Screen):
-    def __init__(self, item_selector: HorizontalRadioSelector, rotate_ccw_button: ImageButton, rotate_cw_button: ImageButton):
+    def __init__(self, item_selector: RadioButtons):
         self.item_selector = item_selector
-        self.rotate_ccw_button = rotate_ccw_button
-        self.rotate_cw_button = rotate_cw_button
         self.backup_tile: Optional[Tile] = None
 
     def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int,
@@ -267,8 +277,6 @@ class EditScreen(Screen):
         screen.blit(counter_surface, counter_rect)
         if current_game_state == GameState.EDIT_LEVEL:
             self.item_selector.draw(screen)
-            self.rotate_cw_button.draw(screen)
-            self.rotate_ccw_button.draw(screen)
         else:
             # Display finished units by team
             orange_finished_surface = big_font.render(

@@ -77,11 +77,50 @@ class Screen:
         pass
 
 
-class HorizontalRadioSelector(Drawable):
+class RadioButtons(Drawable):
+    def __init__(self):
+        self.selected_item: Optional[str] = None
+        self.active = False
+        raise NotImplementedError
+
+    def run(self, pos, key):
+        raise NotImplementedError
+
+
+class RadioMeta(RadioButtons):
+    def __init__(self, radio_buttons: List[RadioButtons]):
+        self.active = False
+        self.selected_item: Optional[str] = None
+        self.radio_buttons = radio_buttons
+
+    def draw(self, surface):
+        for radio_button_set in self.radio_buttons:
+            radio_button_set.draw(surface)
+
+    def run(self, pos, key):
+        self.active = False
+        for radio_button_set in self.radio_buttons:
+            radio_button_set.run(pos, key)
+            if radio_button_set.active:
+                self.active = True
+
+        if len([radio_button_set for radio_button_set in self.radio_buttons if radio_button_set.selected_item is not None]) > 1:
+            for radio_button_set in self.radio_buttons:
+                if not radio_button_set.active:
+                    radio_button_set.selected_item = None
+
+        selected_items = [radio_button_set.selected_item for radio_button_set in self.radio_buttons if radio_button_set.selected_item is not None]
+        if len(selected_items) > 0:
+            self.selected_item = selected_items[0]
+        else:
+            self.selected_item = None
+
+
+class HorizontalRadioSelector(RadioButtons):
     class RadioItem(NamedTuple):
         icon: Surface
         name: str
-        key: int
+        key: Optional[int]
 
     def __init__(self, items: List[RadioItem], start_x: int, start_y: int, end_x: int):
         self.items = items
@@ -89,6 +128,7 @@ class HorizontalRadioSelector(Drawable):
         self.start_y = start_y
         self.end_x = end_x
         self.selected_item: Optional[str] = None
+        self.active = False
 
     def draw(self, screen: Surface):
         draw_x = self.start_x
@@ -107,10 +147,12 @@ class HorizontalRadioSelector(Drawable):
     def run(self, pos, key):
         draw_x = self.start_x
         draw_y = self.start_y
+        self.active = False
 
         for item in self.items:
-            if key == item.key or (draw_x <= pos[0] < draw_x+70 and draw_y <= pos[1] < draw_y+70):
+            if (key == item.key and item.key is not None) or (draw_x <= pos[0] < draw_x+70 and draw_y <= pos[1] < draw_y+70):
                 self.selected_item = item.name
+                self.active = True
 
             draw_x += 70
             if draw_x > self.end_x:
