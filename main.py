@@ -14,7 +14,7 @@ from savedata import save_levels, load_levels, save_user_state, load_user_state
 from tile_images import PLAY_IMAGE, ORANGE_BG, GRASS_IMAGE, WATER_IMAGE, TRAMPOLINE_SLASH, GRAVESTONE_IMAGE, \
     BROKEN_GRAVESTONE_IMAGE, LAVA_IMAGE, FINISH_LINE_IMAGE, APPLE_IMAGE, ORANGE_IMAGE
 from title import render_title_screen
-from ui import ImageButton, TextButton
+from ui import ImageButton, TextButton, Screen, HorizontalRadioSelector
 from unit import TileType, Tile
 
 pygame.init()
@@ -52,8 +52,6 @@ def main():
     troops_killed = 0
     next_round_troops = -1
 
-    sel_x = SCREEN_WIDTH - 35 * 18
-    sel_y = 0
 
     if GENERATE_FILE:
         save_levels("levels_converted.json", level_data)
@@ -96,8 +94,31 @@ def main():
                                 64, 64, FINISH_LINE_IMAGE)
     tunnel_button = ImageButton(SCREEN_WIDTH - 35 * 2, element_height,
                                 64, 64, BROKEN_GRAVESTONE_IMAGE)
+
+    god_mode_editor = HorizontalRadioSelector(
+        [
+            HorizontalRadioSelector.RadioItem(ORANGE_IMAGE, "orange", pygame.K_1),
+            HorizontalRadioSelector.RadioItem(APPLE_IMAGE, "apple", pygame.K_2),
+            HorizontalRadioSelector.RadioItem(GRASS_IMAGE, "grass", pygame.K_3),
+            HorizontalRadioSelector.RadioItem(WATER_IMAGE, "water", pygame.K_4),
+            HorizontalRadioSelector.RadioItem(TRAMPOLINE_SLASH, "trampoline", pygame.K_5),
+            HorizontalRadioSelector.RadioItem(GRAVESTONE_IMAGE, "gravestone", pygame.K_6),
+            HorizontalRadioSelector.RadioItem(BROKEN_GRAVESTONE_IMAGE, "remains", pygame.K_7),
+            HorizontalRadioSelector.RadioItem(LAVA_IMAGE, "lava", pygame.K_8),
+            HorizontalRadioSelector.RadioItem(FINISH_LINE_IMAGE, "finish line", pygame.K_9),
+            HorizontalRadioSelector.RadioItem(BROKEN_GRAVESTONE_IMAGE, "teleporter", pygame.K_0),
+        ],
+        SCREEN_WIDTH - 700,
+        6,
+        SCREEN_WIDTH - 70
+    )
+
     rotate_cw_button = ImageButton(element_height, SCREEN_HEIGHT - 70,64,64, WATER_IMAGE)
     rotate_ccw_button = ImageButton(element_height + 70, SCREEN_HEIGHT - 70, 64, 64, GRASS_IMAGE)
+
+    edit_screen = EditScreen(
+        god_mode_editor, rotate_ccw_button, rotate_cw_button
+    )
 
     while running:
         frame_count += 1
@@ -107,13 +128,9 @@ def main():
         if current_game_state == GameState.TITLE_SCREEN:
             render_title_screen(screen, title_font, start_button)
         elif current_game_state == GameState.RESULTS_SCREEN:
-            next_round_troops = results_screen.render_calculate_outcome(levels, level_idx, max_units, screen)
+            next_round_troops = results_screen.render_calculate_outcome(levels, level_idx, max_units, screen) # REFACTOR!
         elif current_game_state == GameState.DIALOGUE:
-            board.render(screen, current_game_state, frame_count)
-
-            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 100))
-            screen.blit(overlay, (0, 0))
+            render_dialogue(board, current_game_state, frame_count)
 
             if current_dialogue is None:
                 current_game_state = GameState.EDIT_TROOPS
@@ -122,61 +139,9 @@ def main():
             else:
                 current_dialogue.render(screen, big_font, frame_count)
         else:
-            # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
-            board.render(screen, current_game_state, frame_count)
-
-            level_name_surface = big_font.render(level_name, True, (0, 0, 0))
-            l_name_rect = level_name_surface.get_rect(topleft=((SCREEN_WIDTH - 14 * len(level_name)) // 2, (SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2 - 60))
-            pygame.draw.rect(screen, (255, 255, 255), l_name_rect.inflate(20, 10))
-            screen.blit(level_name_surface, l_name_rect)
-
-            play_button.draw(screen)
-
             placed_units = board.get_number_of_units_by_team(Team.ORANGE)
-            counter_text = f"Units: {placed_units}/{max_units - board.units_killed_by_team[Team.ORANGE]}"
-            counter_surface = big_font.render(counter_text, True, (0, 0, 0))
-            counter_rect = counter_surface.get_rect(topleft=(20, 20))
-            pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
-            screen.blit(counter_surface, counter_rect)
 
-            if current_game_state == GameState.EDIT_LEVEL:
-                grass_button.draw(screen)
-                water_button.draw(screen)
-                wall_button.draw(screen)
-                trampoline_button.draw(screen)
-                remains_button.draw(screen)
-                lava_button.draw(screen)
-                finish_button.draw(screen)
-                tunnel_button.draw(screen)
-                rotate_cw_button.draw(screen)
-                rotate_ccw_button.draw(screen)
-                apple_button.draw(screen)
-                orange_button.draw(screen)
-                pygame.draw.rect(screen, (255, 100, 0), (sel_x, sel_y, 70, 70), 5)
-            else:
-                # Display finished units by team
-                orange_finished_surface = big_font.render(
-                    f"{board.finished_units_by_team[Team.ORANGE]}", True, (0, 0, 0)
-                )
-                apple_finished_surface = big_font.render(
-                    f"{board.finished_units_by_team[Team.APPLE]}", True, (0, 0, 0)
-                )
-
-                # Calculate Y-position for team counters
-                team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2 + 20
-
-                # Apple team's finished units
-                if current_game_state == GameState.PLAY_TROOPS:
-                    apple_rect = apple_finished_surface.get_rect(topleft=((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y))
-                    pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
-                    screen.blit(apple_finished_surface, apple_rect)
-
-                    # Orange team's finished units
-                    orange_rect = orange_finished_surface.get_rect(
-                        topleft=((SCREEN_WIDTH + len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y)
-                    )
-                    pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
-                    screen.blit(orange_finished_surface, orange_rect)
+            edit_screen.draw(screen, board, current_game_state, frame_count, level_name, placed_units, max_units)
 
         pygame.display.flip()
 
@@ -187,44 +152,44 @@ def main():
                 element_height = 1
                 if event.key == pygame.K_1:
                     build_mode = 11
-                    sel_x = SCREEN_WIDTH - 35 * 20 - 3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 20 - 3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_2:
                     build_mode = 0
-                    sel_x = SCREEN_WIDTH - 35 * 18 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 18 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_3:
                     build_mode = 1
-                    sel_x = SCREEN_WIDTH - 35 * 16 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 16 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_4:
                     build_mode = 2
-                    sel_x = SCREEN_WIDTH - 35 * 14 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 14 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_5:
                     build_mode = 3
-                    sel_x = SCREEN_WIDTH - 35 * 12 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 12 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_6:
                     build_mode = 4
-                    sel_x = SCREEN_WIDTH - 35 * 10 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 10 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_7:
                     build_mode = 5
-                    sel_x = SCREEN_WIDTH - 35 * 8 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 8 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_8:
                     build_mode = 6
-                    sel_x = SCREEN_WIDTH - 35 * 6 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 6 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_9:
                     build_mode = 7
-                    sel_x = SCREEN_WIDTH - 35 * 4 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 4 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_0:
                     build_mode = 8
-                    sel_x = SCREEN_WIDTH - 35 * 2 -3
-                    sel_y = element_height
+                    edit_screen.sel_x = SCREEN_WIDTH - 35 * 2 -3
+                    edit_screen.sel_y = element_height
                 elif event.key == pygame.K_b and ENABLE_EDITING:
                     if backup_board is not None:
                         board = backup_board
@@ -300,59 +265,59 @@ def main():
 
                     # Check if play button was clicked
                     if play_button.check_click(pos):
-                        # board.set_initial_animations(frame_count)
+                        board.set_initial_animations(frame_count)
                         current_game_state = GameState.PLAY_TROOPS
 
                 elif current_game_state == GameState.EDIT_LEVEL:
                     element_height = 1
                     if grass_button.check_click(pos):
                         build_mode = 1
-                        sel_x = SCREEN_WIDTH - 35 * 16 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 16 - 3
+                        edit_screen.sel_y = element_height
                     elif water_button.check_click(pos):
                         build_mode = 2
-                        sel_x = SCREEN_WIDTH - 35 * 14 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 14 - 3
+                        edit_screen.sel_y = element_height
                     elif trampoline_button.check_click(pos):
                         build_mode = 3
-                        sel_x = SCREEN_WIDTH - 35 * 12 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 12 - 3
+                        edit_screen.sel_y = element_height
                     elif wall_button.check_click(pos):
                         build_mode = 4
-                        sel_x = SCREEN_WIDTH - 35 * 10 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 10 - 3
+                        edit_screen.sel_y = element_height
                     elif remains_button.check_click(pos):
                         build_mode = 5
-                        sel_x = SCREEN_WIDTH - 35 * 8 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 8 - 3
+                        edit_screen.sel_y = element_height
                     elif lava_button.check_click(pos):
                         build_mode = 6
-                        sel_x = SCREEN_WIDTH - 35 * 6 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 6 - 3
+                        edit_screen.sel_y = element_height
                     elif finish_button.check_click(pos):
                         build_mode = 7
-                        sel_x = SCREEN_WIDTH - 35 * 4 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 4 - 3
+                        edit_screen.sel_y = element_height
                     elif tunnel_button.check_click(pos):
                         build_mode = 8
-                        sel_x = SCREEN_WIDTH - 35 * 2 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 2 - 3
+                        edit_screen.sel_y = element_height
                     elif rotate_cw_button.check_click(pos):
                         build_mode = 9
-                        sel_x = 1
-                        sel_y = SCREEN_HEIGHT - 70 -5
+                        edit_screen.sel_x = 1
+                        edit_screen.sel_y = SCREEN_HEIGHT - 70 -5
                     elif rotate_ccw_button.check_click(pos):
                         build_mode = 10
-                        sel_x = 71
-                        sel_y = SCREEN_HEIGHT - 70 - 5
+                        edit_screen.sel_x = 71
+                        edit_screen.sel_y = SCREEN_HEIGHT - 70 - 5
                     elif apple_button.check_click(pos):
                         build_mode = 0
-                        sel_x = SCREEN_WIDTH - 35 * 18 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 18 - 3
+                        edit_screen.sel_y = element_height
                     elif orange_button.check_click(pos):
                         build_mode = 11
-                        sel_x = SCREEN_WIDTH - 35 * 20 - 3
-                        sel_y = element_height
+                        edit_screen.sel_x = SCREEN_WIDTH - 35 * 20 - 3
+                        edit_screen.sel_y = element_height
                     elif play_button.check_click(pos):
                         frame_count += 10
                         board.update(frame_count)
@@ -441,6 +406,65 @@ def main():
     pygame.quit()
 
 
+def render_dialogue(board, current_game_state, frame_count):
+    board.render(screen, current_game_state, frame_count)
+    overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 100))
+    screen.blit(overlay, (0, 0))
+
+
+class EditScreen(Screen):
+    def __init__(self, item_selector: HorizontalRadioSelector, rotate_ccw_button: ImageButton, rotate_cw_button: ImageButton):
+        self.item_selector = item_selector
+        self.rotate_ccw_button = rotate_ccw_button
+        self.rotate_cw_button = rotate_cw_button
+
+    def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int,
+             level_name: str, placed_units: int, max_units: int):
+        # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
+
+        board.render(screen, current_game_state, frame_count)
+        level_name_surface = big_font.render(level_name, True, (0, 0, 0))
+        l_name_rect = level_name_surface.get_rect(
+            topleft=(
+            (SCREEN_WIDTH - 14 * len(level_name)) // 2, (SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2 - 60))
+        pygame.draw.rect(screen, (255, 255, 255), l_name_rect.inflate(20, 10))
+        screen.blit(level_name_surface, l_name_rect)
+        play_button.draw(screen)
+        counter_text = f"Units: {placed_units}/{max_units - board.units_killed_by_team[Team.ORANGE]}"
+        counter_surface = big_font.render(counter_text, True, (0, 0, 0))
+        counter_rect = counter_surface.get_rect(topleft=(20, 20))
+        pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
+        screen.blit(counter_surface, counter_rect)
+        if current_game_state == GameState.EDIT_LEVEL:
+            self.item_selector.draw(screen)
+        else:
+            # Display finished units by team
+            orange_finished_surface = big_font.render(
+                f"{board.finished_units_by_team[Team.ORANGE]}", True, (0, 0, 0)
+            )
+            apple_finished_surface = big_font.render(
+                f"{board.finished_units_by_team[Team.APPLE]}", True, (0, 0, 0)
+            )
+
+            # Calculate Y-position for team counters
+            team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2 + 20
+
+            # Apple team's finished units
+            if current_game_state == GameState.PLAY_TROOPS:
+                apple_rect = apple_finished_surface.get_rect(
+                    topleft=((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y))
+                pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
+                screen.blit(apple_finished_surface, apple_rect)
+
+                # Orange team's finished units
+                orange_rect = orange_finished_surface.get_rect(
+                    topleft=((SCREEN_WIDTH + len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y)
+                )
+                pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
+                screen.blit(orange_finished_surface, orange_rect)
+
+
 def render_checkerboard_background(screen: Surface, frame_count: int):
     screen.fill((201, 221, 255))
 
@@ -454,6 +478,7 @@ def render_checkerboard_background(screen: Surface, frame_count: int):
         for x in range(-screen_width//2, screen_width, tile_width):
             if ((x // tile_width) % 4 == 0 and y // tile_width % 4 == 0) or ((x // tile_width) % 4 == 2 and y // tile_width % 4 == 2):
                 screen.blit(tile_image, (x+(frame_count % anim_length)/2, y+(frame_count % anim_length)/2))
+
 
 if __name__ == "__main__":
     main()
