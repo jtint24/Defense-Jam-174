@@ -37,6 +37,16 @@ class Board:
         return Board(tiles)
 
 
+    def set_initial_animations(self, frame: int):
+        self.animations = []
+
+        for row_idx, row in enumerate(self.tiles):
+            for col_idx, tile in enumerate(row):
+                if tile.unit is not None:
+                    self.animations.append(
+                        StaticUnitAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx))
+                    )
+
     def render(self, screen: Surface, game_state: GameState, frame: int):
         # Calculate the offsets to center the board on the screen
         offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
@@ -118,13 +128,13 @@ class Board:
         for unit, row_idx, col_idx in victims:
             self.animations.append(UnitDeathAnimation(frame, unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
 
-        #logic for all relevant items
+        # logic for all relevant items
         for row_idx, row in enumerate(new_tiles):
             for col_idx, tile in enumerate(row):
                 if tile.unit is not None:
-                    #Trampolines
+                    # Trampolines
                     tile.trampoline_bounce()
-                    #Lava
+                    # Lava
                     if self.tiles[row_idx][col_idx].type == TileType.TRAPDOOR:
                         self.animations.append(UnitDeathAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
                         self.units_killed_by_team[new_tiles[row_idx][col_idx].unit.team] += 1

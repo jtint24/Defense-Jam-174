@@ -300,6 +300,7 @@ def main():
 
                     # Check if play button was clicked
                     if play_button.check_click(pos):
+                        # board.set_initial_animations(frame_count)
                         current_game_state = GameState.PLAY_TROOPS
 
                 elif current_game_state == GameState.EDIT_LEVEL:
