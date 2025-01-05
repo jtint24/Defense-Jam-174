@@ -1,4 +1,4 @@
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Tuple
 
 import pygame
 from pygame import Surface
@@ -69,11 +69,14 @@ class TextButton(Drawable):
         return self.rect.collidepoint(pos)
 
 
-class Screen:
+class GameScreen:
     def __init__(self):
         raise NotImplementedError
 
-    def draw(self, surface: Surface, board: Board, current_game_state: GameState, frame_count: int, *args):
+    def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int, *args):
+        pass
+
+    def run(self, pos: Tuple[int, int], key: int, board: Board):
         pass
 
 
