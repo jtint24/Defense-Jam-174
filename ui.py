@@ -6,7 +6,7 @@ from pygame.font import Font
 
 from board import Board
 from constants import BUTTON_ACTIVE_BG, BUTTON_BG, BUTTON_TEXT_COLOR
-from gamestate import GameState
+from gamemode import GameMode
 
 
 class Drawable:
@@ -73,7 +73,7 @@ class GameScreen:
     def __init__(self):
         raise NotImplementedError
 
-    def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int, *args):
+    def draw(self, screen: Surface, board: Board, current_game_state: GameMode, frame_count: int, *args):
         pass
 
     def run(self, pos: Tuple[int, int], key: int, board: Board):

@@ -7,7 +7,7 @@ from pygame import Surface
 from animations import Animation, UnitMovementAnimation, StaticUnitAnimation, UnitDeathAnimation, UnitWinAnimation, \
     FlankAnimation
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE
-from gamestate import GameState
+from gamemode import GameMode
 from unit import Tile, Team, TileType, Unit, UnitType, Direction
 
 
@@ -47,7 +47,7 @@ class Board:
                         StaticUnitAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx))
                     )
 
-    def render(self, screen: Surface, game_state: GameState, frame: int):
+    def render(self, screen: Surface, game_state: GameMode, frame: int):
         # Calculate the offsets to center the board on the screen
         offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
         offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
@@ -66,11 +66,11 @@ class Board:
 
                 # Render the unit if present (AND it's edit mode cuz if so, no animations)
                 # len(animations) == 0 is a total hack, to patch the first frame of play mode where animations haven't been populated yet
-                if tile.unit is not None and (game_state != GameState.PLAY_TROOPS or len(self.animations) == 0):
+                if tile.unit is not None and (game_state != GameMode.PLAY_TROOPS or len(self.animations) == 0):
                     screen.blit(tile.unit.get_image(), (tile_x, tile_y))
 
                 # Darken tile if it is not passable or not placeable
-                if game_state == GameState.EDIT_TROOPS and (not tile.type.value.is_passable or not tile.is_placeable):
+                if game_state == GameMode.EDIT_TROOPS and (not tile.type.value.is_passable or not tile.is_placeable):
                     dark_surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
                     dark_surface.fill((0, 0, 0, 100))  # Semi-transparent black overlay
                     screen.blit(dark_surface, (tile_x, tile_y))

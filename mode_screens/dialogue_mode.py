@@ -7,7 +7,7 @@ from pygame.font import Font
 from board import Board
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from dialogue import Dialogue
-from gamestate import GameState
+from gamemode import GameMode
 from ui import GameScreen
 
 
@@ -15,7 +15,7 @@ class DialogueScreen(GameScreen):
     def __init__(self):
         pass
 
-    def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int, current_dialogue: Dialogue, big_font: Font):
+    def draw(self, screen: Surface, board: Board, current_game_state: GameMode, frame_count: int, current_dialogue: Dialogue, big_font: Font):
         board.render(screen, current_game_state, frame_count)
         overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 100))

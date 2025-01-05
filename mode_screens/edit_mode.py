@@ -6,7 +6,7 @@ from pygame.font import Font
 
 from board import Board
 from constants import SCREEN_WIDTH, TILE_SIZE, SCREEN_HEIGHT
-from gamestate import GameState
+from gamemode import GameMode
 from tile_images import ORANGE_IMAGE, ROTATE_CCW_IMAGE, ROTATE_CW_IMAGE, APPLE_IMAGE, GRASS_IMAGE, WATER_IMAGE, \
     TRAMPOLINE_SLASH, GRAVESTONE_IMAGE, BROKEN_GRAVESTONE_IMAGE, LAVA_IMAGE, FINISH_LINE_IMAGE
 from ui import RadioButtons, GameScreen, HorizontalRadioSelector, RadioMeta, ImageButton
@@ -19,7 +19,7 @@ class EditScreen(GameScreen):
         self.backup_tile: Optional[Tile] = None
         self.play_button = play_button
 
-    def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int,
+    def draw(self, screen: Surface, board: Board, current_game_state: GameMode, frame_count: int,
              level_name: str, placed_units: int, max_units: int, big_font: Font):
         # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
 
@@ -40,7 +40,7 @@ class EditScreen(GameScreen):
         counter_rect = counter_surface.get_rect(topleft=(20, 20))
         pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
         screen.blit(counter_surface, counter_rect)
-        if current_game_state == GameState.EDIT_LEVEL:
+        if current_game_state == GameMode.EDIT_LEVEL:
             self.item_selector.draw(screen)
         else:
             # Display finished units by team
@@ -55,7 +55,7 @@ class EditScreen(GameScreen):
             team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2 + 20
 
             # Apple team's finished units
-            if current_game_state == GameState.PLAY_TROOPS:
+            if current_game_state == GameMode.PLAY_TROOPS:
                 apple_rect = apple_finished_surface.get_rect(
                     topleft=((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y))
                 pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))

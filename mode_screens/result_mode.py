@@ -6,7 +6,7 @@ from pygame.font import Font
 
 from board import Board
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT
-from gamestate import GameState
+from gamemode import GameMode
 from level import Level
 from ui import GameScreen, TextButton
 from unit import Team
@@ -19,7 +19,7 @@ class ResultsScreen(GameScreen):
         self.next_button = next_button
         self.next_round_troops = 0
 
-    def draw(self, screen: Surface, board: Board, current_game_state: GameState, frame_count: int, levels: List[Level], level_idx: int, max_units: int, title_font: Font, big_font: Font):
+    def draw(self, screen: Surface, board: Board, current_game_state: GameMode, frame_count: int, levels: List[Level], level_idx: int, max_units: int, title_font: Font, big_font: Font):
 
         bonus_troops = levels[level_idx].bonus_troops
         board = levels[level_idx].board

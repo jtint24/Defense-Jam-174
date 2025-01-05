@@ -1,10 +1,17 @@
-from enum import Enum
+from dataclasses import dataclass
+
+from board import Board
+from dialogue import Dialogue
+from gamemode import GameMode
 
 
-class GameState(Enum):
-    TITLE_SCREEN = 1
-    EDIT_TROOPS = 2
-    PLAY_TROOPS = 3
-    RESULTS_SCREEN = 4
-    DIALOGUE = 5
-    EDIT_LEVEL = 6
+@dataclass
+class GameState:
+    board: Board
+    game_mode: GameMode
+    max_units: int
+    bonus_troops: int
+    troops_killed: int
+    level_name: str
+    current_dialogue: Dialogue
+    frame_count: int
