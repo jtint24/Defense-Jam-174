@@ -47,7 +47,7 @@ class Board:
                         StaticUnitAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx))
                     )
 
-    def render(self, screen: Surface, game_state: GameMode, frame: int):
+    def render(self, screen: Surface, game_state: GameMode, frame: int, dark=False):
         # Calculate the offsets to center the board on the screen
         offset_x = (SCREEN_WIDTH - len(self.tiles[0]) * TILE_SIZE) // 2
         offset_y = (SCREEN_HEIGHT - len(self.tiles) * TILE_SIZE) // 2
@@ -70,7 +70,7 @@ class Board:
                     screen.blit(tile.unit.get_image(), (tile_x, tile_y))
 
                 # Darken tile if it is not passable or not placeable
-                if game_state == GameMode.EDIT_TROOPS and (not tile.type.value.is_passable or not tile.is_placeable):
+                if (dark or game_state == GameMode.EDIT_TROOPS) and (not tile.type.value.is_passable or not tile.is_placeable):
                     dark_surface = pygame.Surface((TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
                     dark_surface.fill((0, 0, 0, 100))  # Semi-transparent black overlay
                     screen.blit(dark_surface, (tile_x, tile_y))
@@ -144,8 +144,8 @@ class Board:
                         dest = self.tiles[row_idx][col_idx].destination
                         print(str(dest[0])  + ' ' + str(dest[1]))
                         new_tiles[dest[0]][dest[1]].unit = tile.unit
-                        tile.unit = None
                         self.animations.append(UnitWinAnimation(frame, tile.unit, self.col_to_x(col_idx), self.row_to_y(row_idx)))
+                        tile.unit = None
                     else:
                         #Walls
                         faced_tile, faced_row, faced_col = self.get_new_faced_tile(new_tiles, row_idx, col_idx)
@@ -438,27 +438,30 @@ class Board:
                     count += 1
         return count
 
+    def add_row(self):
+        new_row = []
+        for col_idx in range(len(self.tiles[0])):
+            new_row.append(Tile(TileType.GRASS,None,False,5,Direction.RIGHT, (0,0)))
+        self.tiles.append(new_row)
+
+    def del_row(self):
+        if len(self.tiles) > 1:
+            self.tiles.pop()
+
+    def add_col(self):
+        for row in self.tiles:
+            row.append(Tile(TileType.GRASS,None,False,5,Direction.RIGHT, (0,0)))
+
+    def del_col(self):
+        if len(self.tiles[0]) > 1:
+            for row in self.tiles:
+                row.pop()
+
     def get_faced_tile(self, row_idx: int, col_idx: int) -> Tuple[Optional[Tile], int, int]:
         """
         Gets the tile faced by a unit at a row, col. If the tile faces the edge, gives None
         """
-
-        facing_tile = self.tiles[row_idx][col_idx]
-
-        if facing_tile.unit.direction == Direction.RIGHT:
-            row_idx, col_idx = row_idx, col_idx + 1
-        elif facing_tile.unit.direction == Direction.LEFT:
-            row_idx, col_idx = row_idx, col_idx - 1
-        elif facing_tile.unit.direction == Direction.UP:
-            row_idx, col_idx = row_idx - 1, col_idx
-        elif facing_tile.unit.direction == Direction.DOWN:
-            row_idx, col_idx = row_idx + 1, col_idx
-
-        # Add more logic for different types of units, if necessary...
-
-        if 0 <= row_idx < len(self.tiles) and 0 <= col_idx < len(self.tiles[row_idx]):
-            return self.tiles[row_idx][col_idx], row_idx, col_idx
-        return None, row_idx, col_idx
+        return self.get_new_faced_tile(self.tiles, row_idx, col_idx)
 
     def get_new_faced_tile(self, new_tiles: List[List[Tile]], row_idx: int, col_idx: int) -> Tuple[Optional[Tile], int, int]:
         """

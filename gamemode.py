@@ -8,3 +8,4 @@ class GameMode(Enum):
     RESULTS_SCREEN = 4
     DIALOGUE = 5
     EDIT_LEVEL = 6
+    TEST_LEVEL = 7

@@ -15,7 +15,7 @@ def load_levels(filename: str) -> list:
 def save_levels(filename: str, levels: list) -> None:
     mega_dict = {}
     for level_id, level in enumerate(levels):
-        mega_dict["Level " + str(level_id + 1)] = level.serialize()
+        mega_dict["Level " + str(level_id + 1)] = level
 
     json_data = json.dumps(mega_dict)
     with open(filename, "w") as json_file:

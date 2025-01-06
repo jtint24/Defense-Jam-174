@@ -15,3 +15,4 @@ class GameState:
     level_name: str
     current_dialogue: Dialogue
     frame_count: int
+    placed_units: int

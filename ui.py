@@ -4,9 +4,8 @@ import pygame
 from pygame import Surface
 from pygame.font import Font
 
-from board import Board
 from constants import BUTTON_ACTIVE_BG, BUTTON_BG, BUTTON_TEXT_COLOR
-from gamemode import GameMode
+from gamestate import GameState
 
 
 class Drawable:
@@ -73,10 +72,10 @@ class GameScreen:
     def __init__(self):
         raise NotImplementedError
 
-    def draw(self, screen: Surface, board: Board, current_game_state: GameMode, frame_count: int, *args):
+    def draw(self, screen: Surface, game_state: GameState, *args):
         pass
 
-    def run(self, pos: Tuple[int, int], key: int, board: Board):
+    def run(self, pos: Tuple[int, int], key: int, game_state: GameState):
         pass
 
 
@@ -153,7 +152,7 @@ class HorizontalRadioSelector(RadioButtons):
         self.active = False
 
         for item in self.items:
-            if (key == item.key and item.key is not None) or (draw_x <= pos[0] < draw_x+70 and draw_y <= pos[1] < draw_y+70):
+            if (key == item.key and item.key is not None) or (pos is not None and (draw_x <= pos[0] < draw_x+70 and draw_y <= pos[1] < draw_y+70)):
                 self.selected_item = item.name
                 self.active = True
 
