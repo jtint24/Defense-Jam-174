@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from gamestate import GameState
+from gamemode import GameMode
 from unit import Unit, Direction, Team, UnitType
 from constants import TILE_SIZE
 
@@ -10,7 +10,7 @@ class Animation:
     def __init__(self):
         raise NotImplemented
 
-    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameMode):
         raise NotImplemented
 
 
@@ -29,12 +29,12 @@ class UnitAnimation(Animation):
 
 
 class StaticUnitAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameMode):
         screen.blit(self.unit.get_image(), (self.x, self.y))
 
 
 class UnitMovementAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameMode):
         d_x, d_y = {
             Direction.LEFT: (-1, 0),
             Direction.RIGHT: (1, 0),
@@ -62,7 +62,7 @@ class UnitMovementAnimation(UnitAnimation):
 
 
 class UnitDeathAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameMode):
         animation_frame = current_frame - self.start_frame
 
         total_frames = 15
@@ -91,7 +91,7 @@ class UnitDeathAnimation(UnitAnimation):
 
 
 class UnitWinAnimation(UnitAnimation):
-    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameMode):
 
         animation_frame = current_frame - self.start_frame
 
@@ -122,8 +122,8 @@ class FlankAnimation(Animation):
         self.x = x
         self.start_frame = start_frame
 
-    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameState):
-        if game_state == GameState.EDIT_TROOPS:
+    def draw(self, screen: pygame.Surface, current_frame: int, game_state: GameMode):
+        if game_state == GameMode.EDIT_TROOPS:
             t = ((current_frame - self.start_frame) % 30) / 30
             alpha = int(200 * (math.sin(t*math.pi*2)+1)/2)
         else:

@@ -1,21 +1,24 @@
 import os
 from copy import deepcopy
-from typing import Optional, List
+from json import JSONEncoder
+from typing import List
 
 import pygame
-from pygame import MOUSEBUTTONDOWN, Surface
+from pygame import MOUSEBUTTONDOWN, Surface, MOUSEBUTTONUP
 
-from board import Board, Unit, Direction, Team, UnitType
+import constants
+from board import Unit, Direction, Team, UnitType
 from constants import SCREEN_WIDTH, SCREEN_HEIGHT, TILE_SIZE, GENERATE_FILE, LOAD_FILE, ENABLE_EDITING
+from gamemode import GameMode
 from gamestate import GameState
 from level import Level, level_data
-import results_screen
+from mode_screens.dialogue_mode import get_dialogue_screen
+from mode_screens.edit_mode import get_edit_screen
+from mode_screens.result_mode import get_results_screen
 from savedata import save_levels, load_levels, save_user_state, load_user_state
-from tile_images import PLAY_IMAGE, ORANGE_BG, GRASS_IMAGE, WATER_IMAGE, TRAMPOLINE_SLASH, GRAVESTONE_IMAGE, \
-    BROKEN_GRAVESTONE_IMAGE, LAVA_IMAGE, FINISH_LINE_IMAGE, APPLE_IMAGE, ORANGE_IMAGE
+from tile_images import PLAY_IMAGE, ORANGE_BG
 from title import render_title_screen
 from ui import ImageButton, TextButton
-from unit import TileType, Tile
 
 pygame.init()
 
@@ -23,423 +26,216 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 pygame.display.set_caption("Warchard")
-
-big_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
-small_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 4)
-title_font = pygame.font.Font("resources/fonts/CDStitleUnicaseV.ttf", 8 * 8)
-
 play_button = ImageButton(SCREEN_WIDTH - 64, SCREEN_HEIGHT - 64, 64, 64, PLAY_IMAGE)
-next_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 + 200, 200, 50, "Next Level", big_font)  # Define next button
-start_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, "Start Game", big_font)
 
 def main():
-
-    build_mode = 1
-    placed_units = 0
     levels: List[Level] = []
     clock = pygame.time.Clock()
 
-    backup_board: Optional[Board] = None
-    backup_tile: Optional[Tile] = None
-
-    frame_count = 0
     running = True
+    data_file = "new_levels.json"
 
     level_idx = 0
+    constants.big_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 6)
+    constants.small_font = pygame.font.Font("resources/fonts/CDSBodyV2.ttf", 8 * 4)
+    constants.title_font = pygame.font.Font("resources/fonts/CDStitleUnicaseV.ttf", 8 * 8)
+    game_state = GameState(None, GameMode.TITLE_SCREEN, 2, 0, 0, "", None, 0, 0)
 
-    max_units = 2
-    bonus_troops = 0  # Bonus for clearing the level
-    troops_killed = 0
-    next_round_troops = -1
+    start_button = TextButton(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2, 200, 50, "Start Game", constants.big_font)
 
-    sel_x = SCREEN_WIDTH - 35 * 18
-    sel_y = 0
+    def _default(self, obj):
+        return getattr(obj.__class__, "serialize", _default.default)()
+
+    _default.default = JSONEncoder().default
+    JSONEncoder.default = _default
 
     if GENERATE_FILE:
-        save_levels("levels_converted.json", level_data)
+        save_levels("levels_converted_1.json", level_data)
 
     if LOAD_FILE:
-        levels = load_levels("new_levels.json")
+        levels = load_levels(data_file)
         if os.path.exists("save.json"):
             save = load_user_state("save.json")
             level_idx = save["Level"]
-            max_units = save["Troops"]
+            game_state.max_units = save["Troops"]
 
+    game_state.data_from_level(levels[level_idx])
 
-    board = levels[level_idx].board
-    level_name = levels[level_idx].name
-
-    current_dialogue = levels[level_idx].opening_dialogue
-
-    current_game_state = GameState.TITLE_SCREEN
-
-    element_height = 6
-
-    orange_button = ImageButton(SCREEN_WIDTH - 35 * 20, element_height, 64,
-                               64, ORANGE_IMAGE)
-    apple_button = ImageButton(SCREEN_WIDTH - 35 * 18, element_height, 64,
-                               64, APPLE_IMAGE)
-
-    grass_button = ImageButton(SCREEN_WIDTH - 35 * 16, element_height, 64,
-                               64, GRASS_IMAGE)
-    water_button = ImageButton(SCREEN_WIDTH - 35 * 14, element_height, 64,
-                               64, WATER_IMAGE)
-    trampoline_button = ImageButton(SCREEN_WIDTH - 35 * 12, element_height, 64,
-                                     64, TRAMPOLINE_SLASH)
-    wall_button = ImageButton(SCREEN_WIDTH - 35 * 10, element_height, 64,
-                              64, GRAVESTONE_IMAGE)
-    remains_button = ImageButton(SCREEN_WIDTH - 35 * 8, element_height,
-                                 64, 64, BROKEN_GRAVESTONE_IMAGE)
-    lava_button = ImageButton(SCREEN_WIDTH - 35 * 6, element_height, 64,
-                              64, LAVA_IMAGE)
-    finish_button = ImageButton(SCREEN_WIDTH - 35 * 4, element_height,
-                                64, 64, FINISH_LINE_IMAGE)
-    tunnel_button = ImageButton(SCREEN_WIDTH - 35 * 2, element_height,
-                                64, 64, BROKEN_GRAVESTONE_IMAGE)
-    rotate_cw_button = ImageButton(element_height, SCREEN_HEIGHT - 70,64,64, WATER_IMAGE)
-    rotate_ccw_button = ImageButton(element_height + 70, SCREEN_HEIGHT - 70, 64, 64, GRASS_IMAGE)
+    edit_screen = get_edit_screen(play_button)
+    dialogue_screen = get_dialogue_screen()
+    results_screen = get_results_screen(constants.big_font)
+    typing = False
+    type_to_level_name = False
+    input_string = ""
 
     while running:
-        frame_count += 1
+        game_state.frame_count += 1
 
-        render_checkerboard_background(screen, frame_count)
+        render_checkerboard_background(screen, game_state.frame_count)
 
-        if current_game_state == GameState.TITLE_SCREEN:
-            render_title_screen(screen, title_font, start_button)
-        elif current_game_state == GameState.RESULTS_SCREEN:
-            next_round_troops = results_screen.render_calculate_outcome(levels, level_idx, max_units, screen)
-        elif current_game_state == GameState.DIALOGUE:
-            board.render(screen, current_game_state, frame_count)
-
-            overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 100))
-            screen.blit(overlay, (0, 0))
-
-            if current_dialogue is None:
-                current_game_state = GameState.EDIT_TROOPS
-                board.animations = []
-                board.update_strength_defense(frame_count)
-            else:
-                current_dialogue.render(screen, big_font, frame_count)
+        if game_state.game_mode == GameMode.TITLE_SCREEN:
+            render_title_screen(screen, constants.title_font, start_button)
+        elif game_state.game_mode == GameMode.RESULTS_SCREEN:
+            results_screen.draw(screen, game_state,levels,level_idx)
+        elif game_state.game_mode == GameMode.DIALOGUE:
+            dialogue_screen.draw(screen, game_state)
+        elif game_state.game_mode == GameMode.EDIT_LEVEL:
+            game_state.placed_units = game_state.board.get_number_of_units_by_team(Team.ORANGE)
+            edit_screen.draw(screen, game_state)
         else:
-            # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
-            board.render(screen, current_game_state, frame_count)
-
-            level_name_surface = big_font.render(level_name, True, (0, 0, 0))
-            l_name_rect = level_name_surface.get_rect(topleft=((SCREEN_WIDTH - 14 * len(level_name)) // 2, (SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2 - 60))
-            pygame.draw.rect(screen, (255, 255, 255), l_name_rect.inflate(20, 10))
-            screen.blit(level_name_surface, l_name_rect)
-
-            play_button.draw(screen)
-
-            placed_units = board.get_number_of_units_by_team(Team.ORANGE)
-            counter_text = f"Units: {placed_units}/{max_units - board.units_killed_by_team[Team.ORANGE]}"
-            counter_surface = big_font.render(counter_text, True, (0, 0, 0))
-            counter_rect = counter_surface.get_rect(topleft=(20, 20))
-            pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
-            screen.blit(counter_surface, counter_rect)
-
-            if current_game_state == GameState.EDIT_LEVEL:
-                grass_button.draw(screen)
-                water_button.draw(screen)
-                wall_button.draw(screen)
-                trampoline_button.draw(screen)
-                remains_button.draw(screen)
-                lava_button.draw(screen)
-                finish_button.draw(screen)
-                tunnel_button.draw(screen)
-                rotate_cw_button.draw(screen)
-                rotate_ccw_button.draw(screen)
-                apple_button.draw(screen)
-                orange_button.draw(screen)
-                pygame.draw.rect(screen, (255, 100, 0), (sel_x, sel_y, 70, 70), 5)
-            else:
-                # Display finished units by team
-                orange_finished_surface = big_font.render(
-                    f"{board.finished_units_by_team[Team.ORANGE]}", True, (0, 0, 0)
-                )
-                apple_finished_surface = big_font.render(
-                    f"{board.finished_units_by_team[Team.APPLE]}", True, (0, 0, 0)
-                )
-
-                # Calculate Y-position for team counters
-                team_counters_y = (SCREEN_HEIGHT + len(board.tiles) * TILE_SIZE) // 2 + 20
-
-                # Apple team's finished units
-                if current_game_state == GameState.PLAY_TROOPS:
-                    apple_rect = apple_finished_surface.get_rect(topleft=((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y))
-                    pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
-                    screen.blit(apple_finished_surface, apple_rect)
-
-                    # Orange team's finished units
-                    orange_rect = orange_finished_surface.get_rect(
-                        topleft=((SCREEN_WIDTH + len(board.tiles[0]) * TILE_SIZE) // 2, team_counters_y)
-                    )
-                    pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
-                    screen.blit(orange_finished_surface, orange_rect)
+            game_state.placed_units = game_state.board.get_number_of_units_by_team(Team.ORANGE)
+            edit_screen.common_draw(screen, game_state)
 
         pygame.display.flip()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN:
-                element_height = 1
-                if event.key == pygame.K_1:
-                    build_mode = 11
-                    sel_x = SCREEN_WIDTH - 35 * 20 - 3
-                    sel_y = element_height
-                elif event.key == pygame.K_2:
-                    build_mode = 0
-                    sel_x = SCREEN_WIDTH - 35 * 18 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_3:
-                    build_mode = 1
-                    sel_x = SCREEN_WIDTH - 35 * 16 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_4:
-                    build_mode = 2
-                    sel_x = SCREEN_WIDTH - 35 * 14 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_5:
-                    build_mode = 3
-                    sel_x = SCREEN_WIDTH - 35 * 12 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_6:
-                    build_mode = 4
-                    sel_x = SCREEN_WIDTH - 35 * 10 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_7:
-                    build_mode = 5
-                    sel_x = SCREEN_WIDTH - 35 * 8 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_8:
-                    build_mode = 6
-                    sel_x = SCREEN_WIDTH - 35 * 6 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_9:
-                    build_mode = 7
-                    sel_x = SCREEN_WIDTH - 35 * 4 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_0:
-                    build_mode = 8
-                    sel_x = SCREEN_WIDTH - 35 * 2 -3
-                    sel_y = element_height
-                elif event.key == pygame.K_b and ENABLE_EDITING:
-                    if backup_board is not None:
-                        board = backup_board
-                        current_game_state = GameState.EDIT_LEVEL
-                elif event.key == pygame.K_MINUS and ENABLE_EDITING:
-                    max_units -= 1
-                elif event.key == pygame.K_EQUALS and ENABLE_EDITING:
-                    max_units += 1
-                elif event.key == pygame.K_TAB:
-                    if current_game_state == GameState.DIALOGUE:
-                        current_dialogue = current_dialogue.next
-                elif event.key == pygame.K_ESCAPE:
-                    if current_game_state == GameState.DIALOGUE:
-                        current_game_state = GameState.EDIT_TROOPS
-                        board.animations = []
-                        board.update_strength_defense(frame_count)
-                    elif current_game_state == GameState.EDIT_TROOPS and ENABLE_EDITING:
-                        current_game_state = GameState.EDIT_LEVEL
-                    elif current_game_state == GameState.EDIT_LEVEL:
-                        backup_board = deepcopy(board)
-                        levels[level_idx].board = board
-                        save_levels("new_levels.json", levels)
-                        current_game_state = GameState.EDIT_TROOPS
-                element_height = 6
-            elif event.type == MOUSEBUTTONDOWN:
-                pos = pygame.mouse.get_pos()
-                if current_game_state == GameState.TITLE_SCREEN:
-                    if start_button.check_click(pos):
-                        current_game_state = GameState.DIALOGUE
-                elif current_game_state == GameState.DIALOGUE:
-                    if current_dialogue.is_complete(frame_count):
-                        current_dialogue = current_dialogue.next
-                    else:
-                        current_dialogue.first_appear_frame = -10000
-                    if current_dialogue is None:
-                        current_game_state = GameState.EDIT_TROOPS
-                        board.animations = []
-                        board.update_strength_defense(frame_count)
-
-                elif current_game_state == GameState.RESULTS_SCREEN:
-                    if next_round_troops > 0 and next_button.check_click(pos):
-                        save_user_state("save.json", {"Level": level_idx + 1, "Troops": next_round_troops})
-                        level_idx += 1
-                        board = levels[level_idx].board
-                        level_name = levels[level_idx].name
-                        max_units = next_round_troops
-                        current_dialogue = levels[level_idx].opening_dialogue
-                        if current_dialogue is None:
-                            current_game_state = GameState.EDIT_TROOPS
-                            board.animations = []
-                            board.update_strength_defense(frame_count)
-
+            elif typing:
+                if event.type == pygame.KEYDOWN:
+                    if event.key != pygame.K_RETURN:
+                        if event.key != pygame.K_BACKSPACE:
+                            input_string+=event.unicode
                         else:
-                            current_game_state = GameState.DIALOGUE
-                elif current_game_state == GameState.EDIT_TROOPS:
-                    # Calculate row and column from click position
-                    col = (pos[0] - ((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
-                    row = (pos[1] - ((SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
+                            input_string = levels[level_idx].name[:-1]
+                    else:
+                        typing = False
+                        type_to_level_name = True
+            else:
+                if event.type == pygame.KEYDOWN:
+                    pos = None
+                    key = event.key
+                    if event.key == pygame.K_MINUS and ENABLE_EDITING:
+                        game_state.max_units -= 1
+                    elif event.key == pygame.K_EQUALS and ENABLE_EDITING:
+                        game_state.max_units += 1
+                    elif event.key == pygame.K_ESCAPE:
+                        if game_state.game_mode == GameMode.DIALOGUE:
+                            game_state.game_mode = GameMode.EDIT_TROOPS
+                            game_state.board.animations = []
+                            game_state.board.update_strength_defense(game_state.frame_count)
+                        elif game_state.game_mode == GameMode.EDIT_TROOPS and ENABLE_EDITING:
+                            game_state.game_mode = GameMode.EDIT_LEVEL
+                        elif game_state.game_mode == GameMode.EDIT_LEVEL:
+                            if len(edit_screen.board_history) > 0:
+                                game_state.board = edit_screen.board_history[0]
+                                levels[level_idx] = game_state.data_to_level()
+                                save_levels(data_file, levels)
+                                edit_screen.history_index = 0
+                                edit_screen.board_history = []
+                            else:
+                                levels[level_idx] = game_state.data_to_level()
+                                save_levels(data_file, levels)
+                            game_state.game_mode = GameMode.EDIT_TROOPS
+                    elif key == pygame.K_RETURN:
+                        if game_state.game_mode == GameMode.EDIT_LEVEL:
+                            new_level = Level(deepcopy(game_state.board), "", None, 2)
+                            levels.insert(level_idx+1, new_level)
+                            level_idx+=1
+                            game_state.data_from_level(levels[level_idx])
+                            typing = True
+                            input_string = ""
+                            type_to_level_name = True
+                    elif key == pygame.K_LEFTBRACKET or key == pygame.K_LEFT:
+                        if game_state.game_mode == GameMode.EDIT_LEVEL:
+                            if level_idx>0:
+                                level_idx-=1
+                                game_state.data_from_level(levels[level_idx])
+                                save_user_state("save.json", {"Level": level_idx, "Troops": game_state.max_units})
+                    elif key == pygame.K_RIGHTBRACKET or key == pygame.K_RIGHT:
+                        if game_state.game_mode == GameMode.EDIT_LEVEL:
+                            if level_idx<len(levels)-1:
+                                level_idx+=1
+                                game_state.data_from_level(levels[level_idx])
+                                save_user_state("save.json", {"Level": level_idx, "Troops": game_state.max_units})
+                    elif key == pygame.K_BACKSPACE:
+                        if game_state.game_mode == GameMode.EDIT_LEVEL:
+                            levels.pop(level_idx)
+                            game_state.data_from_level(levels[level_idx])
+                elif event.type == MOUSEBUTTONDOWN:
+                    pos = pygame.mouse.get_pos()
+                    if game_state.game_mode == GameMode.TITLE_SCREEN:
+                        if start_button.check_click(pos):
+                            if game_state.current_dialogue is None:
+                                game_state.game_mode = GameMode.EDIT_TROOPS
+                                game_state.board.animations = []
+                                game_state.board.update_strength_defense(game_state.frame_count)
+                            else:
+                                game_state.game_mode = GameMode.DIALOGUE
+                    elif game_state.game_mode == GameMode.DIALOGUE:
+                        game_state.current_dialogue = dialogue_screen.run(pos, event, game_state)
 
-                    # Ensure click is within bounds
-                    if 0 <= row < len(board.tiles) and 0 <= col < len(board.tiles[0]):
-                        tile = board.tiles[row][col]
+                        if game_state.current_dialogue is None:
+                            game_state.game_mode = GameMode.EDIT_TROOPS
+                            game_state.board.animations = []
+                            game_state.board.update_strength_defense(game_state.frame_count)
 
-                        # Add or remove units based on current state
-                        if tile.unit is None:
-                            if placed_units < max_units - board.units_killed_by_team[Team.ORANGE] and tile.is_free() and tile.is_placeable:
-                                tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-                        elif tile.unit.team is Team.ORANGE:
-                            tile.unit = None
+                    elif game_state.game_mode == GameMode.RESULTS_SCREEN:
+                        next_round_troops = results_screen.next_round_troops
+                        if next_round_troops > 0 and results_screen.next_button.check_click(pos):
+                            save_user_state("save.json", {"Level": level_idx + 1, "Troops": next_round_troops})
+                            level_idx += 1
+                            game_state.max_units = next_round_troops
+                            game_state.data_from_level(levels[level_idx])
+                            if game_state.current_dialogue is None:
+                                game_state.game_mode = GameMode.EDIT_TROOPS
+                                game_state.board.animations = []
+                                game_state.board.update_strength_defense(game_state.frame_count)
+                            else:
+                                game_state.game_mode = GameMode.DIALOGUE
+                    elif game_state.game_mode == GameMode.EDIT_TROOPS:
+                        # Calculate row and column from click position
+                        col = (pos[0] - ((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
+                        row = (pos[1] - ((SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
 
-                    board.animations = []
-                    board.update_strength_defense(frame_count)
+                        # Ensure click is within bounds
+                        if 0 <= row < len(game_state.board.tiles) and 0 <= col < len(game_state.board.tiles[0]):
+                            tile = game_state.board.tiles[row][col]
 
+                            # Add or remove units based on current state
+                            if tile.unit is None:
+                                if game_state.placed_units < game_state.max_units - game_state.board.units_killed_by_team[Team.ORANGE] and tile.is_free() and tile.is_placeable:
+                                    tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
+                            elif tile.unit.team is Team.ORANGE:
+                                tile.unit = None
+
+                        game_state.board.animations = []
+                        game_state.board.update_strength_defense(game_state.frame_count)
+
+                        # Check if play button was clicked
+                        if play_button.check_click(pos):
+                            game_state.board.set_initial_animations(game_state.frame_count)
+                            game_state.game_mode = GameMode.PLAY_TROOPS
+                elif event.type == pygame.MOUSEMOTION and edit_screen.drag:
+                    pos = pygame.mouse.get_pos()
+                else:
+                    pos = None
+
+                if game_state.game_mode == GameMode.EDIT_LEVEL:
+                    edit_screen.run(pos, event, game_state)
                     # Check if play button was clicked
-                    if play_button.check_click(pos):
-                        # board.set_initial_animations(frame_count)
-                        current_game_state = GameState.PLAY_TROOPS
+                    if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.MOUSEBUTTONUP:
+                        game_state.board.animations = []
+                        game_state.board.update_strength_defense(game_state.frame_count)
+        if type_to_level_name:
+            game_state.level_name = input_string
+        # Update board during PLAY_TROOPS phase
+        if game_state.game_mode == GameMode.PLAY_TROOPS:
+            if game_state.frame_count % 15 == 0:
+                update_change = game_state.board.update(game_state.frame_count)
 
-                elif current_game_state == GameState.EDIT_LEVEL:
-                    element_height = 1
-                    if grass_button.check_click(pos):
-                        build_mode = 1
-                        sel_x = SCREEN_WIDTH - 35 * 16 - 3
-                        sel_y = element_height
-                    elif water_button.check_click(pos):
-                        build_mode = 2
-                        sel_x = SCREEN_WIDTH - 35 * 14 - 3
-                        sel_y = element_height
-                    elif trampoline_button.check_click(pos):
-                        build_mode = 3
-                        sel_x = SCREEN_WIDTH - 35 * 12 - 3
-                        sel_y = element_height
-                    elif wall_button.check_click(pos):
-                        build_mode = 4
-                        sel_x = SCREEN_WIDTH - 35 * 10 - 3
-                        sel_y = element_height
-                    elif remains_button.check_click(pos):
-                        build_mode = 5
-                        sel_x = SCREEN_WIDTH - 35 * 8 - 3
-                        sel_y = element_height
-                    elif lava_button.check_click(pos):
-                        build_mode = 6
-                        sel_x = SCREEN_WIDTH - 35 * 6 - 3
-                        sel_y = element_height
-                    elif finish_button.check_click(pos):
-                        build_mode = 7
-                        sel_x = SCREEN_WIDTH - 35 * 4 - 3
-                        sel_y = element_height
-                    elif tunnel_button.check_click(pos):
-                        build_mode = 8
-                        sel_x = SCREEN_WIDTH - 35 * 2 - 3
-                        sel_y = element_height
-                    elif rotate_cw_button.check_click(pos):
-                        build_mode = 9
-                        sel_x = 1
-                        sel_y = SCREEN_HEIGHT - 70 -5
-                    elif rotate_ccw_button.check_click(pos):
-                        build_mode = 10
-                        sel_x = 71
-                        sel_y = SCREEN_HEIGHT - 70 - 5
-                    elif apple_button.check_click(pos):
-                        build_mode = 0
-                        sel_x = SCREEN_WIDTH - 35 * 18 - 3
-                        sel_y = element_height
-                    elif orange_button.check_click(pos):
-                        build_mode = 11
-                        sel_x = SCREEN_WIDTH - 35 * 20 - 3
-                        sel_y = element_height
-                    elif play_button.check_click(pos):
-                        frame_count += 10
-                        board.update(frame_count)
-                    element_height = 6
-                    # Calculate row and column from click position
-                    col = (pos[0] - ((SCREEN_WIDTH - len(board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
-                    row = (pos[1] - ((SCREEN_HEIGHT - len(board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
+                if not update_change:
+                    game_state.troops_killed = game_state.board.units_killed_by_team[Team.ORANGE]
+                    game_state.game_mode = GameMode.RESULTS_SCREEN
 
-                    # Ensure click is within bounds
-                    print("Click Pos: " + str(col) + ", " + str(row))
-                    if 0 <= row < len(board.tiles) and 0 <= col < len(board.tiles[0]):
-                        tile = board.tiles[row][col]
-                        # Add or remove units based on current state
-                        match build_mode:
-                            case 0:
-                                if tile.unit is None:
-                                    if tile.is_free() and not tile.is_placeable:
-                                        tile.unit = Unit(UnitType.SOLDIER, Direction.LEFT, Team.APPLE)
-                                elif tile.unit.team is Team.ORANGE:
-                                    tile.unit = None
-                                elif tile.unit.team is Team.APPLE:
-                                    tile.unit = None
-                            case 1:
-                                tile.type = TileType.GRASS
-                            case 2:
-                                tile.type = TileType.WATER
-                            case 3:
-                                tile.type = TileType.TRAMPOLINE
-                            case 4:
-                                tile.type = TileType.WALL
-                            case 5:
-                                tile.type = TileType.DEADWALL
-                            case 6:
-                                tile.type = TileType.TRAPDOOR
-                            case 7:
-                                tile.type = TileType.FINISH_LINE
-                            case 8:
-                                if tile.type == TileType.TUNNEL:
-                                    backup_tile = tile
-                                elif backup_tile is not None:
-                                    backup_tile.destination = (row, col)
-                                    backup_tile = None
-                                else:
-                                    tile.type = TileType.TUNNEL
-                            case 9:
-                                if tile.unit is not None:
-                                    tile.unit.rotate_cw()
-                                elif tile.type == TileType.TRAMPOLINE:
-                                    tile.rotate_cw()
-                            case 10:
-                                if tile.unit is not None:
-                                    tile.unit.rotate_ccw()
-                                elif tile.type == TileType.TRAMPOLINE:
-                                    tile.rotate_ccw()
-                            case 11:
-                                if tile.unit is None:
-                                    if tile.is_free():
-                                        tile.unit = Unit(UnitType.SOLDIER, Direction.RIGHT, Team.ORANGE)
-                                elif tile.unit.team is Team.ORANGE:
-                                    tile.unit = None
-                                elif tile.unit.team is Team.APPLE:
-                                    tile.unit = None
-
-                    board.animations = []
-                    board.update_strength_defense(frame_count)
-
-                    # Check if play button was clicked
+                elif game_state.board.updates % 10 == 0:
+                    game_state.game_mode = GameMode.EDIT_TROOPS
+                    game_state.board.animations = []
+                    game_state.board.update_strength_defense(game_state.frame_count)
 
         clock.tick(50)
 
-        # Update board during PLAY_TROOPS phase
-        if current_game_state == GameState.PLAY_TROOPS:
-            if frame_count % 15 == 0:
-                update_change = board.update(frame_count)
-
-                if not update_change:
-                    troops_killed = board.units_killed_by_team[Team.ORANGE]
-                    current_game_state = GameState.RESULTS_SCREEN
-
-                elif board.updates % 10 == 0:
-                    current_game_state = GameState.EDIT_TROOPS
-                    board.animations = []
-                    board.update_strength_defense(frame_count)
-
-
     pygame.quit()
-
 
 def render_checkerboard_background(screen: Surface, frame_count: int):
     screen.fill((201, 221, 255))
@@ -457,5 +253,3 @@ def render_checkerboard_background(screen: Surface, frame_count: int):
 
 if __name__ == "__main__":
     main()
-
-

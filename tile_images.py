@@ -44,6 +44,9 @@ APPLE_TROOP_IMAGE = load_sprite_image("apple_troop")
 APPLE_SUPER_TROOP_IMAGE = load_sprite_image("apple_super_troop")
 APPLE_TANK_IMAGE = load_sprite_image("apple_tank")
 
+ROTATE_CW_IMAGE = load_sprite_image("rotate_cw")
+ROTATE_CCW_IMAGE = load_sprite_image("rotate_ccw")
+
 
 GENERAL_IMAGE = load_sprite_image("general")
 GENERAL_APPLE_IMAGE = load_sprite_image("apple_general")

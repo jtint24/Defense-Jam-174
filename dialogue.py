@@ -9,9 +9,12 @@ from constants import SCREEN_WIDTH, SCREEN_HEIGHT
 from tile_images import GENERAL_IMAGE, DEFENSE_OVERLAY, OFFENSE_OVERLAY, GENERAL_APPLE_IMAGE
 
 
+
+
 class DialogueImageData(NamedTuple):
     image: Surface
     name: str
+
 
 class DialogueImage(Enum):
     GENERAL_ORANGE = DialogueImageData(GENERAL_IMAGE, 'GENERAL_ORANGE')
