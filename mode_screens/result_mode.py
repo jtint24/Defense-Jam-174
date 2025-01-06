@@ -53,7 +53,7 @@ class ResultsScreen(GameScreen):
         if self.next_round_troops > 0 and len(levels) > level_idx + 1:
             self.next_button.draw(screen)
 
-    def run(self, pos: Tuple[int, int], key: int, game_state: Board):
+    def run(self, pos, event, game_state: Board):
         pass
 
 

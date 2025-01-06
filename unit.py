@@ -147,7 +147,23 @@ class TileType(Enum):
         for tile_type in TileType:
             if tile_type.value.char_code == name:
                 return tile_type
-        return TileType.GRASS
+        match name:
+            case "W":
+                return TileType.WATER
+            case "T":
+                return TileType.TRAMPOLINE
+            case "L":
+                return TileType.WALL
+            case "D":
+                return TileType.DEADWALL
+            case "R":
+                return TileType.TRAPDOOR
+            case "F":
+                return TileType.FINISH_LINE
+            case "N":
+                return TileType.TUNNEL
+            case _:
+                return TileType.GRASS
 
 class Tile:
     def __init__(self, type: TileType, unit: Optional[Unit], is_placeable: bool = True, health:int = 5,
@@ -246,4 +262,3 @@ class Tile:
                 deepcopy(self.destination, memo))
             memo[id_self] = _copy
         return _copy
-

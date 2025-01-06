@@ -21,7 +21,7 @@ class DialogueScreen(GameScreen):
         if game_state.current_dialogue is not None:
             game_state.current_dialogue.render(screen, constants.big_font, game_state.frame_count)
 
-    def run(self, pos: Tuple[int, int], key: int, game_state: GameState):
+    def run(self, pos, event, game_state: GameState):
         if game_state.current_dialogue is not None:
             if pos:
                 if game_state.current_dialogue.is_complete(game_state.frame_count):

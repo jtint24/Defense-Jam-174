@@ -28,66 +28,55 @@ class EditScreen(GameScreen):
     def draw(self, screen: Surface, game_state: GameState):
         # Render the board and UI during EDIT_TROOPS and PLAY_TROOPS phases
         big_font = constants.big_font
-        dark = self.item_selector.selected_item == "placable"
-        game_state.board.render(screen, game_state.game_mode, game_state.frame_count, dark)
-        level_name_surface = big_font.render(game_state.level_name, True, (0, 0, 0))
-        l_name_rect = level_name_surface.get_rect(
-            topleft=(
-                (SCREEN_WIDTH - 14 * len(game_state.level_name)) // 2,
-                (SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) // 2 - 60
-            )
-        )
-        pygame.draw.rect(screen, (255, 255, 255), l_name_rect.inflate(20, 10))
-        screen.blit(level_name_surface, l_name_rect)
-        self.play_button.draw(screen)
         self.reset.draw(screen)
-
-        counter_text = f"Units: {game_state.placed_units}/{game_state.max_units - game_state.board.units_killed_by_team[Team.ORANGE]}"
-        counter_surface = big_font.render(counter_text, True, (0, 0, 0))
-        counter_rect = counter_surface.get_rect(topleft=(20, 20))
-        pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
-        screen.blit(counter_surface, counter_rect)
-
+        dark = self.item_selector.selected_item == "placable"
         self.item_selector.draw(screen)
+        self.common_draw(screen, game_state, dark)
 
-        # Display finished units by team
-        orange_finished_surface = big_font.render(
-            f"{game_state.board.finished_units_by_team[Team.ORANGE]}", True, (0, 0, 0)
-        )
-        apple_finished_surface = big_font.render(
-            f"{game_state.board.finished_units_by_team[Team.APPLE]}", True, (0, 0, 0)
-        )
-
-        # Calculate Y-position for team counters
-        team_counters_y = (SCREEN_HEIGHT + len(game_state.board.tiles) * TILE_SIZE) // 2 + 20
-
-        # Apple team's finished units
-        apple_rect = apple_finished_surface.get_rect(
-            topleft=((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) // 2, team_counters_y))
-        pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
-        screen.blit(apple_finished_surface, apple_rect)
-
-        # Orange team's finished units
-        orange_rect = orange_finished_surface.get_rect(
-            topleft=((SCREEN_WIDTH + len(game_state.board.tiles[0]) * TILE_SIZE) // 2, team_counters_y)
-        )
-        pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
-        screen.blit(orange_finished_surface, orange_rect)
-
-    def run(self, pos: Optional[Tuple[int, int]], key: int, game_state: GameState):
-        self.item_selector.run(pos, key)
-        # Calculate row and column from click position
-        if pos is not None:
-            col = (pos[0] - ((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
-            row = (pos[1] - ((SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
+    def run(self, pos: Tuple[int], event: pygame.event.Event, game_state: GameState):
+        if event.type == pygame.KEYDOWN:
+            key = event.key
+            self.item_selector.run(None, key)
+            if key == pygame.K_r:
+                if len(self.board_history) > 0:
+                    game_state.board = self.board_history[0]
+                    self.board_history = []
+                    self.history_index = 0
+            elif key == pygame.K_COMMA:
+                if len(self.board_history) > 0 and self.history_index > 0:
+                    game_state.board = self.board_history[self.history_index - 1]
+                    self.history_index -= 1
+            elif key == pygame.K_u:
+                game_state.board.add_row()
+            elif key == pygame.K_i:
+                game_state.board.add_col()
+            elif key == pygame.K_j:
+                game_state.board.del_row()
+            elif key == pygame.K_k:
+                game_state.board.del_col()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            self.item_selector.run(pos, None)
             if self.reset.check_click(pos):
                 if len(self.board_history) > 0:
                     game_state.board = self.board_history[0]
                     self.board_history = []
                     self.history_index = 0
+            elif self.play_button.check_click(pos):
+                if self.history_index < len(self.board_history):
+                    self.history_index = len(self.board_history)
+                    game_state.board = self.board_history[self.history_index - 1]
+                self.board_history.append(deepcopy(game_state.board))
+                game_state.board.update(game_state.frame_count)
+                self.history_index += 1
+            # Calculate row and column from click position
+            col = (pos[0] - ((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) // 2)) // TILE_SIZE
+            row = (pos[1] - ((SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) // 2)) // TILE_SIZE
             # Ensure click is within bounds
             print("Click Pos: " + str(col) + ", " + str(row))
-            if 0 <= row < len(game_state.board.tiles) and 0 <= col < len(game_state.board.tiles[0]) and not self.drag:
+            if row == len(game_state.board.tiles) and col == len(game_state.board.tiles[0]):
+                self.drag = True
+            elif 0 <= row < len(game_state.board.tiles) and 0 <= col < len(
+                    game_state.board.tiles[0]) and not self.drag:
                 tile = game_state.board.tiles[row][col]
                 # Add or remove units based on current state
                 match self.item_selector.selected_item:
@@ -113,12 +102,15 @@ class EditScreen(GameScreen):
                         tile.type = TileType.WATER
                     case "trampoline":
                         tile.type = TileType.TRAMPOLINE
+                        tile.is_placeable = False
                     case "wall":
                         tile.type = TileType.WALL
+                        tile.is_placeable = False
                     case "remains":
                         tile.type = TileType.DEADWALL
                     case "lava":
                         tile.type = TileType.TRAPDOOR
+                        tile.is_placeable = False
                     case "finish line":
                         tile.type = TileType.FINISH_LINE
                     case "teleporter":
@@ -140,40 +132,67 @@ class EditScreen(GameScreen):
                         elif tile.type == TileType.TRAMPOLINE:
                             tile.rotate_ccw()
                     case "placable":
-                        if tile.type != TileType.WALL and tile.type != TileType.TRAMPOLINE and tile.type != TileType.WATER:
+                        if tile.type != TileType.WALL and tile.type != TileType.TRAMPOLINE and tile.type != TileType.WATER and tile.type != TileType.TRAPDOOR:
                             tile.is_placeable = not tile.is_placeable
-            else:
-                col = (pos[0] - ((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) / 2)) / TILE_SIZE
-                row = (pos[1] - ((SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) / 2)) / TILE_SIZE
-                print("Click Pos: " + str(col) + ", " + str(row))
-                if row-0.25 > len(game_state.board.tiles) and self.drag:
-                    game_state.board.add_row()
-                elif row+0.25 < len(game_state.board.tiles) and self.drag:
-                    game_state.board.del_row()
-                if col-0.25 > len(game_state.board.tiles[0]) and self.drag:
-                    game_state.board.add_col()
-                elif col+0.25 < len(game_state.board.tiles[0]) and self.drag:
-                    game_state.board.del_col()
 
-        if key is not None:
-            if key == pygame.K_r:
-                if len(self.board_history) > 0:
-                    game_state.board = self.board_history[0]
-                    self.board_history = []
-                    self.history_index = 0
-            elif key == pygame.K_COMMA:
-                if len(self.board_history) > 0 and self.history_index > 0:
-                    game_state.board = self.board_history[self.history_index - 1]
-                    self.history_index -= 1
-            elif key == pygame.K_u:
+        elif event.type == pygame.MOUSEBUTTONUP and self.drag:
+            self.drag = False
+        elif event.type == pygame.MOUSEMOTION and self.drag:
+            col = (pos[0] - ((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) / 2)) / TILE_SIZE
+            row = (pos[1] - ((SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) / 2)) / TILE_SIZE
+            print("Click Pos: " + str(col) + ", " + str(row))
+            if row-0.25 > len(game_state.board.tiles):
                 game_state.board.add_row()
-            elif key == pygame.K_i:
-                game_state.board.add_col()
-            elif key == pygame.K_j:
+            elif row+0.25 < len(game_state.board.tiles):
                 game_state.board.del_row()
-            elif key == pygame.K_k:
+            if col-0.25 > len(game_state.board.tiles[0]):
+                game_state.board.add_col()
+            elif col+0.25 < len(game_state.board.tiles[0]):
                 game_state.board.del_col()
 
+    def common_draw(self, screen: Surface, game_state: GameState, dark: bool = False):
+        big_font = constants.big_font
+        game_state.board.render(screen, game_state.game_mode, game_state.frame_count, dark)
+        level_name_surface = big_font.render(game_state.level_name, True, (0, 0, 0))
+        l_name_rect = level_name_surface.get_rect(
+            topleft=(
+                (SCREEN_WIDTH - 14 * len(game_state.level_name)) // 2,
+                (SCREEN_HEIGHT - len(game_state.board.tiles) * TILE_SIZE) // 2 - 60
+            )
+        )
+        pygame.draw.rect(screen, (255, 255, 255), l_name_rect.inflate(20, 10))
+        screen.blit(level_name_surface, l_name_rect)
+        self.play_button.draw(screen)
+
+        counter_text = f"Units: {game_state.placed_units}/{game_state.max_units - game_state.board.units_killed_by_team[Team.ORANGE]}"
+        counter_surface = big_font.render(counter_text, True, (0, 0, 0))
+        counter_rect = counter_surface.get_rect(topleft=(20, 20))
+        pygame.draw.rect(screen, (255, 255, 255), counter_rect.inflate(20, 10))
+        screen.blit(counter_surface, counter_rect)
+
+        # Display finished units by team
+        orange_finished_surface = big_font.render(
+            f"{game_state.board.finished_units_by_team[Team.ORANGE]}", True, (0, 0, 0)
+        )
+        apple_finished_surface = big_font.render(
+            f"{game_state.board.finished_units_by_team[Team.APPLE]}", True, (0, 0, 0)
+        )
+
+        # Calculate Y-position for team counters
+        team_counters_y = (SCREEN_HEIGHT + len(game_state.board.tiles) * TILE_SIZE) // 2 + 20
+
+        # Apple team's finished units
+        apple_rect = apple_finished_surface.get_rect(
+            topleft=((SCREEN_WIDTH - len(game_state.board.tiles[0]) * TILE_SIZE) // 2 - 10, team_counters_y))
+        pygame.draw.rect(screen, (255, 255, 255), apple_rect.inflate(20, 10))
+        screen.blit(apple_finished_surface, apple_rect)
+
+        # Orange team's finished units
+        orange_rect = orange_finished_surface.get_rect(
+            topleft=((SCREEN_WIDTH + len(game_state.board.tiles[0]) * TILE_SIZE) // 2, team_counters_y)
+        )
+        pygame.draw.rect(screen, (255, 255, 255), orange_rect.inflate(20, 10))
+        screen.blit(orange_finished_surface, orange_rect)
 
 def get_edit_screen(play_button):
     god_mode_editor = RadioMeta(

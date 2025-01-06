@@ -75,7 +75,7 @@ class GameScreen:
     def draw(self, screen: Surface, game_state: GameState, *args):
         pass
 
-    def run(self, pos: Tuple[int, int], key: int, game_state: GameState):
+    def run(self, pos: Tuple[int], event: pygame.event.Event, game_state: GameState):
         pass
 
 
@@ -160,6 +160,3 @@ class HorizontalRadioSelector(RadioButtons):
             if draw_x > self.end_x:
                 draw_x = self.start_x
                 draw_y += 70
-
-
-
